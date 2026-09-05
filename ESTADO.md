@@ -1,11 +1,10 @@
 # Estado del proyecto
 
-Última actualización: 2026-08-29
+Última actualización: 2026-09-05
 
 ## Fase actual
 
-Preparación del repositorio. Todavía no se ha implementado el modelo físico ni
-se han añadido dependencias gráficas.
+Preparación del modelo físico mínimo. Definidas las bases conceptuales (coordenadas, unidades y carga); pendiente de implementar los tipos en Rust.
 
 ## Objetivo acordado
 
@@ -38,6 +37,9 @@ si se continúa, se cierra o se redefine el proyecto.
 - **Representación prevista:** Raylib cuando llegue la fase gráfica, porque su
   modelo de dibujo es sencillo y el usuario ya lo conoce.
 - **Diseño inicial:** cálculo físico puro antes que representación gráfica.
+- **Sistema de coordenadas:** cartesianas 2D para el espacio físico, independientes de la pantalla. La conversión a píxeles (zoom, desplazamiento) se delega a la capa gráfica futura.
+- **Unidades:** Sistema Internacional (metros, culombios, newtons por culombio).
+- **Representación de carga:** posición 2D y valor escalar con signo en el propio dato numérico, evitando banderas o condicionales.
 - **Forma de trabajo:** un lenguaje y un cambio conceptual cada vez; la IA
   actuará como tutora salvo petición explícita de implementación completa.
 
@@ -53,8 +55,7 @@ si se continúa, se cierra o se redefine el proyecto.
 
 ## Siguiente paso
 
-Decidir y documentar el sistema de coordenadas, las unidades y la representación
-mínima de una carga puntual antes de escribir la función que calcula el campo.
+Modelar en Rust los tipos de datos mínimos para posición 2D y carga puntual, y escribir la primera prueba para el cálculo del campo eléctrico puro.
 
 ## Fuera del alcance actual
 
@@ -80,3 +81,6 @@ Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
 - **2026-08-29:** se definieron el propósito, el alcance inicial, las reglas de
   tutoría y la estructura documental del repositorio. Se instaló Rust estable
   y se verificó el proyecto mínimo con Cargo y Clippy.
+- **2026-09-05:** se acordaron las decisiones de diseño físico: coordenadas
+  cartesianas 2D desacopladas de pantalla, unidades en el SI y representación
+  escalar con signo para la carga puntual.

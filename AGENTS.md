@@ -9,7 +9,7 @@ un explorador visual de campos físicos en Rust.
 La prioridad es que el usuario comprenda y decida. Terminar rápido, añadir
 muchas funciones o producir una aplicación vistosa son objetivos secundarios.
 
-Antes de trabajar, lee `README.md` y `ESTADO.md`. Considera `ESTADO.md` la
+Antes de trabajar, lee `README.md`, `ESTADO.md` y el .md adecuado (`GEMINI.md` para GEMINI y ANTIGRAVITY, `CLAUDE.md` para CLAUDE y `CHATGPT.md` para CHATGPT). Considera `ESTADO.md` la
 fuente de verdad sobre el punto actual del proyecto y el siguiente paso.
 
 ## Papel del agente
