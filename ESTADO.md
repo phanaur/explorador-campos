@@ -4,7 +4,7 @@
 
 ## Fase actual
 
-Preparación del modelo físico mínimo. Definidas las bases conceptuales (coordenadas, unidades y carga); pendiente de implementar los tipos en Rust.
+Modelo físico mínimo en desarrollo. Definidas las estructuras `Vector2D` y `Particula`, con métodos iniciales de módulo y módulo al cuadrado.
 
 ## Objetivo acordado
 
@@ -40,6 +40,7 @@ si se continúa, se cierra o se redefine el proyecto.
 - **Sistema de coordenadas:** cartesianas 2D para el espacio físico, independientes de la pantalla. La conversión a píxeles (zoom, desplazamiento) se delega a la capa gráfica futura.
 - **Unidades:** Sistema Internacional (metros, culombios, newtons por culombio).
 - **Representación de carga:** posición 2D y valor escalar con signo en el propio dato numérico, evitando banderas o condicionales.
+- **Tipos de dominio iniciales:** estructura con campos nombrados `Vector2D` (`x: f64`, `y: f64`) para posiciones y vectores en el plano, y `Particula` compuesta por posición y carga.
 - **Forma de trabajo:** un lenguaje y un cambio conceptual cada vez; la IA
   actuará como tutora salvo petición explícita de implementación completa.
 
@@ -47,15 +48,16 @@ si se continúa, se cierra o se redefine el proyecto.
 
 - Proyecto mínimo de Cargo preparado, sin dependencias externas.
 - Toolchain estable instalada: Rust 1.98.0.
-- No existe todavía código de dominio.
+- Tipos `Vector2D` y `Particula` definidos en `src/main.rs`.
+- Métodos `module` y `module_squared` implementados en `Vector2D`.
 - No se ha añadido Raylib.
 - `cargo fmt --check`, `cargo check`, `cargo test` y
-  `cargo clippy -- -D warnings` terminan correctamente.
-- La suite contiene todavía 0 pruebas porque no existe código físico.
+  `cargo clippy` terminan correctamente.
+- La suite contiene todavía 0 pruebas activas.
 
 ## Siguiente paso
 
-Modelar en Rust los tipos de datos mínimos para posición 2D y carga puntual, y escribir la primera prueba para el cálculo del campo eléctrico puro.
+Escribir pruebas unitarias para `Vector2D` e implementar la operación de resta de vectores para determinar desplazamientos entre cargas.
 
 ## Fuera del alcance actual
 
@@ -81,6 +83,4 @@ Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
 - **2026-08-29:** se definieron el propósito, el alcance inicial, las reglas de
   tutoría y la estructura documental del repositorio. Se instaló Rust estable
   y se verificó el proyecto mínimo con Cargo y Clippy.
-- **2026-09-05:** se acordaron las decisiones de diseño físico: coordenadas
-  cartesianas 2D desacopladas de pantalla, unidades en el SI y representación
-  escalar con signo para la carga puntual.
+- **2026-09-05:** se acordaron las decisiones de diseño físico (coordenadas cartesianas 2D, unidades SI, carga escalar) y los contratos de tutoría. Se implementaron en Rust las estructuras `Vector2D` (con métodos `module` y `module_squared`) y `Particula`.
