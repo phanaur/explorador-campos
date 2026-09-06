@@ -4,7 +4,7 @@
 
 ## Fase actual
 
-Modelo físico mínimo en desarrollo. Estructura `Vector2D` con álgebra vectorial completa (`Add`, `Sub`, `Mul<f64>`, `Div<f64>`, `Neg`, `scalar_prod`, `module`, `module_squared`) y estructura `Particula`. 8 pruebas unitarias activas y verificadas.
+Modelo físico mínimo en desarrollo. Estructura `Vector2D` con álgebra completa y método `unit`. Estructura `Particle` (entidad del dominio manejada mediante préstamo/referencia) y función pura `electric_field_ch_point` para el campo electrostático. 10 pruebas unitarias activas y verificadas.
 
 ## Objetivo acordado
 
@@ -40,9 +40,11 @@ si se continúa, se cierra o se redefine el proyecto.
 - **Sistema de coordenadas:** cartesianas 2D para el espacio físico, independientes de la pantalla. La conversión a píxeles (zoom, desplazamiento) se delega a la capa gráfica futura.
 - **Unidades:** Sistema Internacional (metros, culombios, newtons por culombio).
 - **Representación de carga:** posición 2D y valor escalar con signo en el propio dato numérico, evitando banderas o condicionales.
-- **Tipos de dominio iniciales:** estructura con campos nombrados `Vector2D` (`x: f64`, `y: f64`) para posiciones y vectores en el plano, y `Particula` compuesta por posición y carga.
+- **Tipos de dominio iniciales:** estructura con campos nombrados `Vector2D` (`x: f64`, `y: f64`) para posiciones y vectores en el plano, y `Particle` (`mass: f64`, `pos: Vector2D`, `charge: f64`).
 - **Semántica de copia para vectores:** `Vector2D` implementa `Clone` y `Copy` al ser un tipo pequeño de datos contiguos (16 bytes), facilitando el paso por valor en operaciones algebraicas.
-- **Sobrecarga de operadores:** implementación de traits de `std::ops` (iniciado con `Sub`) para expresar operaciones físicas y matemáticas de forma idiomática.
+- **Semántica de entidad para partículas:** `Particle` representa una entidad física con estado y no implementa `Copy`. Las funciones que inspeccionan sus propiedades reciben préstamos inmutables (`&Particle`).
+- **Normalización vectorial:** método `unit` en `Vector2D` para obtener el vector unitario en la misma dirección.
+- **Sobrecarga de operadores:** implementación de traits de `std::ops` (`Sub`, `Add`, `Mul<f64>`, `Div<f64>`, `Neg`) para expresar operaciones algebraicas de forma idiomática.
 - **Pruebas de coma flotante:** validación con tolerancia (épsilon) y diferencia absoluta (`abs`) con `assert!`, evitando la igualdad estricta de `assert_eq!`.
 - **Forma de trabajo:** un lenguaje y un cambio conceptual cada vez; la IA
   actuará como tutora salvo petición explícita de implementación completa.
@@ -51,14 +53,15 @@ si se continúa, se cierra o se redefine el proyecto.
 
 - Proyecto mínimo de Cargo preparado, sin dependencias externas.
 - Toolchain estable instalada: Rust 1.98.0.
-- Tipos `Vector2D` y `Particula` definidos en `src/main.rs`.
-- `Vector2D` cuenta con `Copy`, `Clone`, métodos `module`, `module_squared`, `scalar_prod`, e implementaciones de `std::ops` (`Sub`, `Add`, `Mul<f64>`, `Div<f64>`, `Neg`).
-- Módulo de pruebas unitarias configurado con `#[cfg(test)]` y 8 pruebas activas pasando al 100%.
+- Tipos `Vector2D` y `Particle` definidos en `src/main.rs`.
+- `Vector2D` cuenta con `Copy`, `Clone`, métodos `module`, `module_squared`, `scalar_prod`, `unit`, e implementaciones de `std::ops`.
+- Función pura `electric_field_ch_point(&Particle, Vector2D) -> Vector2D` implementada y vinculada a la constante electrostática `K`.
+- Módulo de pruebas unitarias configurado con `#[cfg(test)]` y 10 pruebas activas pasando al 100%.
 - No se ha añadido Raylib.
 
 ## Siguiente paso
 
-Diseñar e implementar el cálculo de desplazamiento o vector de distancia relativa entre partículas (`Particula`).
+Diseñar pruebas unitarias para propiedades físicas conocidas del campo (ley del inverso del cuadrado al variar la distancia y simetría radial) y considerar la gestión de singularidades (distancia cero).
 
 ## Fuera del alcance actual
 
@@ -87,4 +90,5 @@ Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
 - **2026-09-05:** se acordaron las decisiones de diseño físico (coordenadas cartesianas 2D, unidades SI, carga escalar) y los contratos de tutoría. Se implementaron en Rust las estructuras `Vector2D` (con métodos `module` y `module_squared`) y `Particula`.
 - **2026-09-06:** se estructuró el módulo de pruebas unitarias con `#[cfg(test)]` y comprobación con tolerancia (`abs` y `assert!`) para `f64`. Se optimizó `module_squared`, se derivaron `Clone` y `Copy` para `Vector2D` y se implementó el trait `std::ops::Sub`.
 - **2026-09-06 (sesión 2):** se completó la base algebraica de `Vector2D` resolviendo sobrecarga homogénea (`Add`, `Sub`), heterogénea con escalares (`Mul<f64>`, `Div<f64>`), negación de vectores (`Neg`) y producto escalar (`scalar_prod`). Se corrigió el uso de `#[test]` individual y se alcanzaron 8 pruebas unitarias en verde.
+- **2026-09-06 (sesión 3):** se implementó `unit` en `Vector2D` y la función pura `electric_field_ch_point`. Se profundizó en el sistema de propiedad de Rust, diferenciando el paso por valor de `Vector2D` del paso por préstamo inmutable `&Particle`. Se corrigieron trampas de coma flotante en los tests y se alcanzaron 10 pruebas unitarias en verde.
 
