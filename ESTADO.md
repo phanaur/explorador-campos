@@ -1,10 +1,10 @@
 # Estado del proyecto
 
-Última actualización: 2026-09-05
+Última actualización: 2026-09-06
 
 ## Fase actual
 
-Modelo físico mínimo en desarrollo. Definidas las estructuras `Vector2D` y `Particula`, con métodos iniciales de módulo y módulo al cuadrado.
+Modelo físico mínimo en desarrollo. Estructuras `Vector2D` (con `Clone`, `Copy` y resta mediante `Sub`) y `Particula`. Primera prueba unitaria activa y verificada con tolerancia numérica.
 
 ## Objetivo acordado
 
@@ -41,6 +41,9 @@ si se continúa, se cierra o se redefine el proyecto.
 - **Unidades:** Sistema Internacional (metros, culombios, newtons por culombio).
 - **Representación de carga:** posición 2D y valor escalar con signo en el propio dato numérico, evitando banderas o condicionales.
 - **Tipos de dominio iniciales:** estructura con campos nombrados `Vector2D` (`x: f64`, `y: f64`) para posiciones y vectores en el plano, y `Particula` compuesta por posición y carga.
+- **Semántica de copia para vectores:** `Vector2D` implementa `Clone` y `Copy` al ser un tipo pequeño de datos contiguos (16 bytes), facilitando el paso por valor en operaciones algebraicas.
+- **Sobrecarga de operadores:** implementación de traits de `std::ops` (iniciado con `Sub`) para expresar operaciones físicas y matemáticas de forma idiomática.
+- **Pruebas de coma flotante:** validación con tolerancia (épsilon) y diferencia absoluta (`abs`) con `assert!`, evitando la igualdad estricta de `assert_eq!`.
 - **Forma de trabajo:** un lenguaje y un cambio conceptual cada vez; la IA
   actuará como tutora salvo petición explícita de implementación completa.
 
@@ -49,15 +52,13 @@ si se continúa, se cierra o se redefine el proyecto.
 - Proyecto mínimo de Cargo preparado, sin dependencias externas.
 - Toolchain estable instalada: Rust 1.98.0.
 - Tipos `Vector2D` y `Particula` definidos en `src/main.rs`.
-- Métodos `module` y `module_squared` implementados en `Vector2D`.
+- `Vector2D` cuenta con `Copy`, `Clone`, métodos `module` y `module_squared`, e implementación de `std::ops::Sub`.
+- Módulo de pruebas unitarias configurado con `#[cfg(test)]` y 1 prueba activa pasando.
 - No se ha añadido Raylib.
-- `cargo fmt --check`, `cargo check`, `cargo test` y
-  `cargo clippy` terminan correctamente.
-- La suite contiene todavía 0 pruebas activas.
 
 ## Siguiente paso
 
-Escribir pruebas unitarias para `Vector2D` e implementar la operación de resta de vectores para determinar desplazamientos entre cargas.
+Escribir prueba unitaria para la resta (`Sub`) de `Vector2D` e implementar la función de desplazamiento entre partículas.
 
 ## Fuera del alcance actual
 
@@ -84,3 +85,5 @@ Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
   tutoría y la estructura documental del repositorio. Se instaló Rust estable
   y se verificó el proyecto mínimo con Cargo y Clippy.
 - **2026-09-05:** se acordaron las decisiones de diseño físico (coordenadas cartesianas 2D, unidades SI, carga escalar) y los contratos de tutoría. Se implementaron en Rust las estructuras `Vector2D` (con métodos `module` y `module_squared`) y `Particula`.
+- **2026-09-06:** se estructuró el módulo de pruebas unitarias con `#[cfg(test)]` y comprobación con tolerancia (`abs` y `assert!`) para `f64`. Se optimizó `module_squared`, se derivaron `Clone` y `Copy` para `Vector2D` y se implementó el trait `std::ops::Sub`.
+
