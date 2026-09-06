@@ -101,6 +101,7 @@ struct Particle {
     mass: f64,
     pos: Vector2D,
     charge: f64,
+    radius: f64,
 }
 
 // Función cálculo del campo en un punto
@@ -109,6 +110,10 @@ fn electric_field_ch_point(part: &Particle, point: Vector2D) -> Vector2D {
     let distance_vec = point - part.pos;
 
     let distance_sq = distance_vec.module_squared();
+
+    if distance_sq <= part.radius.powi(2) {
+        return Vector2D { x: 0.0, y: 0.0 };
+    }
 
     let distance_unit = distance_vec.unit();
 
@@ -229,6 +234,7 @@ mod tests {
             mass: 1.0,
             pos: Vector2D { x: 0.0, y: 0.0 },
             charge: 1.0e-9,
+            radius: 1_f64,
         };
         let point = Vector2D { x: 3.0, y: 4.0 };
 
@@ -250,6 +256,7 @@ mod tests {
             mass: 1.0,
             pos: Vector2D { x: 0.0, y: 0.0 },
             charge: 1.0e-9,
+            radius: 1_f64,
         };
         let point_a = Vector2D { x: 3.0, y: 4.0 };
         let point_b = Vector2D { x: 6.0, y: 8.0 };
@@ -258,5 +265,19 @@ mod tests {
         let e_field_b_mod = electric_field_ch_point(&part, point_b).module();
 
         assert!((e_field_a_mod - 4_f64 * e_field_b_mod).abs() < 0.000001);
+    }
+
+    #[test]
+    fn test_electric_field_null() {
+        let part = Particle {
+            mass: 1_f64,
+            pos: Vector2D { x: 0.0, y: 0.0 },
+            charge: 1.0e-9,
+            radius: 1_f64,
+        };
+        let point = Vector2D { x: 0.0, y: 0.0 };
+        let e_field = electric_field_ch_point(&part, point);
+
+        assert!(e_field.x.abs() < 0.000001 && e_field.y.abs() < 0.000001);
     }
 }

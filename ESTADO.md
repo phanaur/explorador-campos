@@ -4,7 +4,7 @@
 
 ## Fase actual
 
-Modelo físico mínimo en desarrollo. Estructura `Vector2D` con álgebra completa y método `unit`. Estructura `Particle` (entidad del dominio manejada mediante préstamo/referencia) y función pura `electric_field_ch_point` para el campo electrostático. 11 pruebas unitarias activas y verificadas.
+Modelo físico mínimo en desarrollo. Estructura `Vector2D` con álgebra completa y método `unit`. Estructura `Particle` con radio para modelar partículas como cortezas esféricas delgadas. Función pura `electric_field_ch_point` con gestión de singularidad y frontera interior ($r \le R \implies \vec{E} = \vec{0}$). 12 pruebas unitarias activas y verificadas.
 
 ## Objetivo acordado
 
@@ -46,6 +46,7 @@ si se continúa, se cierra o se redefine el proyecto.
 - **Normalización vectorial:** método `unit` en `Vector2D` para obtener el vector unitario en la misma dirección.
 - **Sobrecarga de operadores:** implementación de traits de `std::ops` (`Sub`, `Add`, `Mul<f64>`, `Div<f64>`, `Neg`) para expresar operaciones algebraicas de forma idiomática.
 - **Pruebas de coma flotante:** validación con tolerancia (épsilon) y diferencia absoluta (`abs`) con `assert!`, evitando la igualdad estricta de `assert_eq!`.
+- **Modelo de partícula y singularidad:** `Particle` incorpora `radius: f64` modelando una corteza esférica delgada. Para distancias al cuadrado menores o iguales al radio al cuadrado ($r^2 \le R^2$), `electric_field_ch_point` retorna un vector nulo (`Vector2D { x: 0.0, y: 0.0 }`). Esto resuelve la singularidad en $r = 0$ y evita divisiones por cero (`NaN`/`inf`) sin introducir raíces cuadradas adicionales.
 - **Forma de trabajo:** un lenguaje y un cambio conceptual cada vez; la IA
   actuará como tutora salvo petición explícita de implementación completa.
 
@@ -55,13 +56,13 @@ si se continúa, se cierra o se redefine el proyecto.
 - Toolchain estable instalada: Rust 1.98.0.
 - Tipos `Vector2D` y `Particle` definidos en `src/main.rs`.
 - `Vector2D` cuenta con `Copy`, `Clone`, métodos `module`, `module_squared`, `scalar_prod`, `unit`, e implementaciones de `std::ops`.
-- Función pura `electric_field_ch_point(&Particle, Vector2D) -> Vector2D` implementada y vinculada a la constante electrostática `K`.
-- Módulo de pruebas unitarias configurado con `#[cfg(test)]` y 11 pruebas activas pasando al 100%, incluyendo la ley del inverso del cuadrado.
+- Función pura `electric_field_ch_point(&Particle, Vector2D) -> Vector2D` implementada, vinculada a `K` y protegida contra singularidades ($r \le R$).
+- Módulo de pruebas unitarias configurado con `#[cfg(test)]` y 12 pruebas activas pasando al 100%, incluyendo la ley del inverso del cuadrado y campo nulo en el interior/centro.
 - No se ha añadido Raylib.
 
 ## Siguiente paso
 
-Comprobar casos de simetría radial, superposición/cancelación con dos partículas o abordar la gestión de singularidades (distancia cero).
+Comprobar principio de superposición / cancelación de campo con múltiples partículas o pasar a la representación gráfica inicial (punto 4).
 
 ## Fuera del alcance actual
 
@@ -92,4 +93,4 @@ Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
 - **2026-09-06 (sesión 2):** se completó la base algebraica de `Vector2D` resolviendo sobrecarga homogénea (`Add`, `Sub`), heterogénea con escalares (`Mul<f64>`, `Div<f64>`), negación de vectores (`Neg`) y producto escalar (`scalar_prod`). Se corrigió el uso de `#[test]` individual y se alcanzaron 8 pruebas unitarias en verde.
 - **2026-09-06 (sesión 3):** se implementó `unit` en `Vector2D` y la función pura `electric_field_ch_point`. Se profundizó en el sistema de propiedad de Rust, diferenciando el paso por valor de `Vector2D` del paso por préstamo inmutable `&Particle`. Se corrigieron trampas de coma flotante en los tests y se alcanzaron 10 pruebas unitarias en verde.
 - **2026-09-06 (sesión 4):** se diseñó e implementó la prueba de la ley del inverso del cuadrado (`test_inverse_sq_electric_field`), validando que al duplicar la distancia la intensidad cae a la cuarta parte. Se consolidó el uso del atributo `#[test]` y el blindaje con `abs()` en aserciones de coma flotante. 11 pruebas unitarias en verde.
-
+- **2026-09-06 (sesión 5):** se añadió el campo `radius` a `Particle` y se gestionó la singularidad en `electric_field_ch_point` devolviendo vector nulo cuando $r \le R$. Se añadió la prueba unitaria `test_electric_field_null` verificando el comportamiento en el origen `(0.0, 0.0)`. 12 pruebas unitarias en verde.
