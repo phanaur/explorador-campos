@@ -243,4 +243,20 @@ mod tests {
 
         assert!(result_abs < 0.000001 && e_field.x >= 0.0 && e_field.y >= 0.0);
     }
+
+    #[test]
+    fn test_inverse_sq_electric_field() {
+        let part = Particle {
+            mass: 1.0,
+            pos: Vector2D { x: 0.0, y: 0.0 },
+            charge: 1.0e-9,
+        };
+        let point_a = Vector2D { x: 3.0, y: 4.0 };
+        let point_b = Vector2D { x: 6.0, y: 8.0 };
+
+        let e_field_a_mod = electric_field_ch_point(&part, point_a).module();
+        let e_field_b_mod = electric_field_ch_point(&part, point_b).module();
+
+        assert!((e_field_a_mod - 4_f64 * e_field_b_mod).abs() < 0.000001);
+    }
 }

@@ -4,7 +4,7 @@
 
 ## Fase actual
 
-Modelo físico mínimo en desarrollo. Estructura `Vector2D` con álgebra completa y método `unit`. Estructura `Particle` (entidad del dominio manejada mediante préstamo/referencia) y función pura `electric_field_ch_point` para el campo electrostático. 10 pruebas unitarias activas y verificadas.
+Modelo físico mínimo en desarrollo. Estructura `Vector2D` con álgebra completa y método `unit`. Estructura `Particle` (entidad del dominio manejada mediante préstamo/referencia) y función pura `electric_field_ch_point` para el campo electrostático. 11 pruebas unitarias activas y verificadas.
 
 ## Objetivo acordado
 
@@ -56,12 +56,12 @@ si se continúa, se cierra o se redefine el proyecto.
 - Tipos `Vector2D` y `Particle` definidos en `src/main.rs`.
 - `Vector2D` cuenta con `Copy`, `Clone`, métodos `module`, `module_squared`, `scalar_prod`, `unit`, e implementaciones de `std::ops`.
 - Función pura `electric_field_ch_point(&Particle, Vector2D) -> Vector2D` implementada y vinculada a la constante electrostática `K`.
-- Módulo de pruebas unitarias configurado con `#[cfg(test)]` y 10 pruebas activas pasando al 100%.
+- Módulo de pruebas unitarias configurado con `#[cfg(test)]` y 11 pruebas activas pasando al 100%, incluyendo la ley del inverso del cuadrado.
 - No se ha añadido Raylib.
 
 ## Siguiente paso
 
-Diseñar pruebas unitarias para propiedades físicas conocidas del campo (ley del inverso del cuadrado al variar la distancia y simetría radial) y considerar la gestión de singularidades (distancia cero).
+Comprobar casos de simetría radial, superposición/cancelación con dos partículas o abordar la gestión de singularidades (distancia cero).
 
 ## Fuera del alcance actual
 
@@ -91,4 +91,5 @@ Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
 - **2026-09-06:** se estructuró el módulo de pruebas unitarias con `#[cfg(test)]` y comprobación con tolerancia (`abs` y `assert!`) para `f64`. Se optimizó `module_squared`, se derivaron `Clone` y `Copy` para `Vector2D` y se implementó el trait `std::ops::Sub`.
 - **2026-09-06 (sesión 2):** se completó la base algebraica de `Vector2D` resolviendo sobrecarga homogénea (`Add`, `Sub`), heterogénea con escalares (`Mul<f64>`, `Div<f64>`), negación de vectores (`Neg`) y producto escalar (`scalar_prod`). Se corrigió el uso de `#[test]` individual y se alcanzaron 8 pruebas unitarias en verde.
 - **2026-09-06 (sesión 3):** se implementó `unit` en `Vector2D` y la función pura `electric_field_ch_point`. Se profundizó en el sistema de propiedad de Rust, diferenciando el paso por valor de `Vector2D` del paso por préstamo inmutable `&Particle`. Se corrigieron trampas de coma flotante en los tests y se alcanzaron 10 pruebas unitarias en verde.
+- **2026-09-06 (sesión 4):** se diseñó e implementó la prueba de la ley del inverso del cuadrado (`test_inverse_sq_electric_field`), validando que al duplicar la distancia la intensidad cae a la cuarta parte. Se consolidó el uso del atributo `#[test]` y el blindaje con `abs()` en aserciones de coma flotante. 11 pruebas unitarias en verde.
 
