@@ -4,7 +4,7 @@
 
 ## Fase actual
 
-Modelo físico mínimo en desarrollo. Estructura `Vector2D` con álgebra completa y método `unit`. Estructura `Particle` con radio para modelar partículas como cortezas esféricas delgadas. Función pura `electric_field_ch_point` con gestión de singularidad y frontera interior ($r \le R \implies \vec{E} = \vec{0}$). 12 pruebas unitarias activas y verificadas.
+Modelo físico mínimo en desarrollo. Estructura `Vector2D` con álgebra completa (`Add`, `Sub`, `Mul<f64>`, `Div<f64>`, `Neg`, `AddAssign`, `SubAssign`) y método `unit`. Estructura `Particle` con `radius`. Función `electric_field_ch_point` y cálculo del campo total por superposición con `total_electric_field`. 15 pruebas unitarias activas y verificadas.
 
 ## Objetivo acordado
 
@@ -44,9 +44,10 @@ si se continúa, se cierra o se redefine el proyecto.
 - **Semántica de copia para vectores:** `Vector2D` implementa `Clone` y `Copy` al ser un tipo pequeño de datos contiguos (16 bytes), facilitando el paso por valor en operaciones algebraicas.
 - **Semántica de entidad para partículas:** `Particle` representa una entidad física con estado y no implementa `Copy`. Las funciones que inspeccionan sus propiedades reciben préstamos inmutables (`&Particle`).
 - **Normalización vectorial:** método `unit` en `Vector2D` para obtener el vector unitario en la misma dirección.
-- **Sobrecarga de operadores:** implementación de traits de `std::ops` (`Sub`, `Add`, `Mul<f64>`, `Div<f64>`, `Neg`) para expresar operaciones algebraicas de forma idiomática.
-- **Pruebas de coma flotante:** validación con tolerancia (épsilon) y diferencia absoluta (`abs`) con `assert!`, evitando la igualdad estricta de `assert_eq!`.
+- **Sobrecarga de operadores:** implementación de traits de `std::ops` (`Sub`, `Add`, `Mul<f64>`, `Div<f64>`, `Neg`, `AddAssign`, `SubAssign`) para expresar operaciones algebraicas de forma idiomática.
+- **Pruebas de coma flotante:** validación con tolerancia (épsilon) y diferencia absoluta (`abs`) o módulo euclídeo (`module()`) con `assert!`, evitando la igualdad estricta de `assert_eq!`.
 - **Modelo de partícula y singularidad:** `Particle` incorpora `radius: f64` modelando una corteza esférica delgada. Para distancias al cuadrado menores o iguales al radio al cuadrado ($r^2 \le R^2$), `electric_field_ch_point` retorna un vector nulo (`Vector2D { x: 0.0, y: 0.0 }`). Esto resuelve la singularidad en $r = 0$ y evita divisiones por cero (`NaN`/`inf`) sin introducir raíces cuadradas adicionales.
+- **Superposición electrostática:** función pura `total_electric_field` que acumula la contribución vectorial de cada partícula sobre un punto dado.
 - **Forma de trabajo:** un lenguaje y un cambio conceptual cada vez; la IA
   actuará como tutora salvo petición explícita de implementación completa.
 
@@ -55,14 +56,14 @@ si se continúa, se cierra o se redefine el proyecto.
 - Proyecto mínimo de Cargo preparado, sin dependencias externas.
 - Toolchain estable instalada: Rust 1.98.0.
 - Tipos `Vector2D` y `Particle` definidos en `src/main.rs`.
-- `Vector2D` cuenta con `Copy`, `Clone`, métodos `module`, `module_squared`, `scalar_prod`, `unit`, e implementaciones de `std::ops`.
-- Función pura `electric_field_ch_point(&Particle, Vector2D) -> Vector2D` implementada, vinculada a `K` y protegida contra singularidades ($r \le R$).
-- Módulo de pruebas unitarias configurado con `#[cfg(test)]` y 12 pruebas activas pasando al 100%, incluyendo la ley del inverso del cuadrado y campo nulo en el interior/centro.
+- `Vector2D` cuenta con `Copy`, `Clone`, métodos `module`, `module_squared`, `scalar_prod`, `unit`, e implementaciones completas de `std::ops` (incluyendo `AddAssign` y `SubAssign`).
+- Funciones de cálculo `electric_field_ch_point` (con singularidad blindada) y `total_electric_field` implementadas.
+- Módulo de pruebas unitarias con 15 pruebas pasando al 100%, verificando álgebra, asignación compuesta, ley del inverso del cuadrado, campo nulo interior y cancelación por superposición.
 - No se ha añadido Raylib.
 
 ## Siguiente paso
 
-Comprobar principio de superposición / cancelación de campo con múltiples partículas o pasar a la representación gráfica inicial (punto 4).
+Iniciar la fase gráfica (punto 4 del alcance): evaluar la integración con Raylib y el diseño de la conversión de coordenadas del mundo físico a píxeles en pantalla.
 
 ## Fuera del alcance actual
 
@@ -94,3 +95,4 @@ Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
 - **2026-09-06 (sesión 3):** se implementó `unit` en `Vector2D` y la función pura `electric_field_ch_point`. Se profundizó en el sistema de propiedad de Rust, diferenciando el paso por valor de `Vector2D` del paso por préstamo inmutable `&Particle`. Se corrigieron trampas de coma flotante en los tests y se alcanzaron 10 pruebas unitarias en verde.
 - **2026-09-06 (sesión 4):** se diseñó e implementó la prueba de la ley del inverso del cuadrado (`test_inverse_sq_electric_field`), validando que al duplicar la distancia la intensidad cae a la cuarta parte. Se consolidó el uso del atributo `#[test]` y el blindaje con `abs()` en aserciones de coma flotante. 11 pruebas unitarias en verde.
 - **2026-09-06 (sesión 5):** se añadió el campo `radius` a `Particle` y se gestionó la singularidad en `electric_field_ch_point` devolviendo vector nulo cuando $r \le R$. Se añadió la prueba unitaria `test_electric_field_null` verificando el comportamiento en el origen `(0.0, 0.0)`. 12 pruebas unitarias en verde.
+- **2026-09-06 (sesión 6):** se implementaron `AddAssign` y `SubAssign` para `Vector2D`. Se creó la función `total_electric_field` y se validó la cancelación del campo por superposición en `test_total_electric_field`. 15 pruebas unitarias en verde.

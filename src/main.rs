@@ -9,10 +9,9 @@
 /// - Establecimiento de las diferentes operaciones matemáticas referentes a Vector2D.
 /// - Cálculo del campo eléctrico generado por una partícula en un punto.
 ///
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
 
 /// Constantes universales utilizadas:
-
 const K: f64 = 8.9875e9; // Nm^2C^{-2}
 
 /// En este punto, definimos el tipo matemático Vector2D, así como sus diferentes implementaciones y operaciones
@@ -48,6 +47,15 @@ impl Sub for Vector2D {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
         }
+    }
+}
+
+impl SubAssign for Vector2D {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+        };
     }
 }
 
@@ -95,6 +103,15 @@ impl Add for Vector2D {
     }
 }
 
+impl AddAssign for Vector2D {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = Self {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        };
+    }
+}
+
 // Struct de Partícula.
 
 struct Particle {
@@ -118,6 +135,15 @@ fn electric_field_ch_point(part: &Particle, point: Vector2D) -> Vector2D {
     let distance_unit = distance_vec.unit();
 
     distance_unit * (K * part.charge / distance_sq)
+}
+
+fn total_electric_field(part_list: &Vec<Particle>, point: Vector2D) -> Vector2D {
+    let mut total_field: Vector2D = Vector2D { x: 0.0, y: 0.0 };
+
+    for part in part_list {
+        total_field += electric_field_ch_point(part, point);
+    }
+    total_field
 }
 
 fn main() {}
@@ -158,6 +184,18 @@ mod tests {
     }
 
     #[test]
+    fn test_sub_assign() {
+        let mut a = Vector2D { x: 2.0, y: 1.0 };
+        let b = Vector2D { x: 1.0, y: 1.0 };
+        let solution = Vector2D { x: 1.0, y: 0.0 };
+        a -= b;
+
+        let result = a - solution;
+
+        assert!(result.x < 0.000001 && result.y < 0.000001);
+    }
+
+    #[test]
     fn test_sub() {
         let a = Vector2D { x: 2.0, y: 1.0 };
         let b = Vector2D { x: 1.0, y: 1.0 };
@@ -165,6 +203,18 @@ mod tests {
         let sub = a - b;
 
         let result = sub - solution;
+
+        assert!(result.x < 0.000001 && result.y < 0.000001);
+    }
+
+    #[test]
+    fn test_add_assign() {
+        let mut a = Vector2D { x: 2.0, y: 1.0 };
+        let b = Vector2D { x: 1.0, y: 1.0 };
+        let solution = Vector2D { x: 3.0, y: 2.0 };
+        a += b;
+
+        let result = a - solution;
 
         assert!(result.x < 0.000001 && result.y < 0.000001);
     }
@@ -279,5 +329,32 @@ mod tests {
         let e_field = electric_field_ch_point(&part, point);
 
         assert!(e_field.x.abs() < 0.000001 && e_field.y.abs() < 0.000001);
+    }
+
+    #[test]
+    fn test_total_electric_field() {
+        let mut part_list = Vec::new();
+        part_list.push(Particle {
+            mass: 1.0,
+            pos: Vector2D { x: 0.0, y: 0.0 },
+            charge: 1e-9,
+            radius: 1.0,
+        });
+        part_list.push(Particle {
+            mass: 1.0,
+            pos: Vector2D { x: 3.0, y: 3.0 },
+            charge: 1e-9,
+            radius: 1.0,
+        });
+
+        let point = Vector2D { x: 1.5, y: 1.5 };
+
+        let solution = Vector2D { x: 0.0, y: 0.0 };
+
+        let total_field = total_electric_field(&part_list, point);
+
+        let result = (total_field - solution).module();
+
+        assert!(result < 0.000001);
     }
 }
