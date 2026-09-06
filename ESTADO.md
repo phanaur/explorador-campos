@@ -4,7 +4,7 @@
 
 ## Fase actual
 
-Modelo físico mínimo en desarrollo. Estructuras `Vector2D` (con `Clone`, `Copy` y resta mediante `Sub`) y `Particula`. Primera prueba unitaria activa y verificada con tolerancia numérica.
+Modelo físico mínimo en desarrollo. Estructura `Vector2D` con álgebra vectorial completa (`Add`, `Sub`, `Mul<f64>`, `Div<f64>`, `Neg`, `scalar_prod`, `module`, `module_squared`) y estructura `Particula`. 8 pruebas unitarias activas y verificadas.
 
 ## Objetivo acordado
 
@@ -52,13 +52,13 @@ si se continúa, se cierra o se redefine el proyecto.
 - Proyecto mínimo de Cargo preparado, sin dependencias externas.
 - Toolchain estable instalada: Rust 1.98.0.
 - Tipos `Vector2D` y `Particula` definidos en `src/main.rs`.
-- `Vector2D` cuenta con `Copy`, `Clone`, métodos `module` y `module_squared`, e implementación de `std::ops::Sub`.
-- Módulo de pruebas unitarias configurado con `#[cfg(test)]` y 1 prueba activa pasando.
+- `Vector2D` cuenta con `Copy`, `Clone`, métodos `module`, `module_squared`, `scalar_prod`, e implementaciones de `std::ops` (`Sub`, `Add`, `Mul<f64>`, `Div<f64>`, `Neg`).
+- Módulo de pruebas unitarias configurado con `#[cfg(test)]` y 8 pruebas activas pasando al 100%.
 - No se ha añadido Raylib.
 
 ## Siguiente paso
 
-Escribir prueba unitaria para la resta (`Sub`) de `Vector2D` e implementar la función de desplazamiento entre partículas.
+Diseñar e implementar el cálculo de desplazamiento o vector de distancia relativa entre partículas (`Particula`).
 
 ## Fuera del alcance actual
 
@@ -86,4 +86,5 @@ Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
   y se verificó el proyecto mínimo con Cargo y Clippy.
 - **2026-09-05:** se acordaron las decisiones de diseño físico (coordenadas cartesianas 2D, unidades SI, carga escalar) y los contratos de tutoría. Se implementaron en Rust las estructuras `Vector2D` (con métodos `module` y `module_squared`) y `Particula`.
 - **2026-09-06:** se estructuró el módulo de pruebas unitarias con `#[cfg(test)]` y comprobación con tolerancia (`abs` y `assert!`) para `f64`. Se optimizó `module_squared`, se derivaron `Clone` y `Copy` para `Vector2D` y se implementó el trait `std::ops::Sub`.
+- **2026-09-06 (sesión 2):** se completó la base algebraica de `Vector2D` resolviendo sobrecarga homogénea (`Add`, `Sub`), heterogénea con escalares (`Mul<f64>`, `Div<f64>`), negación de vectores (`Neg`) y producto escalar (`scalar_prod`). Se corrigió el uso de `#[test]` individual y se alcanzaron 8 pruebas unitarias en verde.
 
