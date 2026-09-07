@@ -1,10 +1,10 @@
 # Estado del proyecto
 
-Última actualización: 2026-09-06
+Última actualización: 2026-09-07
 
 ## Fase actual
 
-Modelo físico mínimo en desarrollo. Estructura `Vector2D` con álgebra completa (`Add`, `Sub`, `Mul<f64>`, `Div<f64>`, `Neg`, `AddAssign`, `SubAssign`) y método `unit`. Estructura `Particle` con `radius`. Función `electric_field_ch_point` y cálculo del campo total por superposición con `total_electric_field`. 15 pruebas unitarias activas y verificadas.
+Modelo físico y matemático modularizado y refinado. Módulo independiente `math` (`Vector2D` con álgebra completa, `Copy`, `unit` y 11 pruebas) y módulo `physics` (`Particle`, ley de Coulomb blindada, superposición con `total_electric_field` sobre rodajas `&[Particle]` y 4 pruebas). 15 pruebas unitarias activas y verificadas por módulo.
 
 ## Objetivo acordado
 
@@ -37,6 +37,7 @@ si se continúa, se cierra o se redefine el proyecto.
 - **Representación prevista:** Raylib cuando llegue la fase gráfica, porque su
   modelo de dibujo es sencillo y el usuario ya lo conoce.
 - **Diseño inicial:** cálculo físico puro antes que representación gráfica.
+- **Modularización y separación de responsabilidades:** división explícita del código en `math.rs` (herramienta matemática abstracta reutilizable) y `physics.rs` (dominio físico electrostático que consume `crate::math`), manteniendo `main.rs` como orquestador y punto de entrada limpio.
 - **Sistema de coordenadas:** cartesianas 2D para el espacio físico, independientes de la pantalla. La conversión a píxeles (zoom, desplazamiento) se delega a la capa gráfica futura.
 - **Unidades:** Sistema Internacional (metros, culombios, newtons por culombio).
 - **Representación de carga:** posición 2D y valor escalar con signo en el propio dato numérico, evitando banderas o condicionales.
@@ -47,23 +48,23 @@ si se continúa, se cierra o se redefine el proyecto.
 - **Sobrecarga de operadores:** implementación de traits de `std::ops` (`Sub`, `Add`, `Mul<f64>`, `Div<f64>`, `Neg`, `AddAssign`, `SubAssign`) para expresar operaciones algebraicas de forma idiomática.
 - **Pruebas de coma flotante:** validación con tolerancia (épsilon) y diferencia absoluta (`abs`) o módulo euclídeo (`module()`) con `assert!`, evitando la igualdad estricta de `assert_eq!`.
 - **Modelo de partícula y singularidad:** `Particle` incorpora `radius: f64` modelando una corteza esférica delgada. Para distancias al cuadrado menores o iguales al radio al cuadrado ($r^2 \le R^2$), `electric_field_ch_point` retorna un vector nulo (`Vector2D { x: 0.0, y: 0.0 }`). Esto resuelve la singularidad en $r = 0$ y evita divisiones por cero (`NaN`/`inf`) sin introducir raíces cuadradas adicionales.
-- **Superposición electrostática:** función pura `total_electric_field` que acumula la contribución vectorial de cada partícula sobre un punto dado.
+- **Superposición electrostática y colecciones:** función pura `total_electric_field` desacoplada del contenedor mediante una rodaja (`&[Particle]`), permitiendo evaluar campos sobre cualquier secuencia contigua sin exigir la propiedad de un `Vec`.
 - **Forma de trabajo:** un lenguaje y un cambio conceptual cada vez; la IA
   actuará como tutora salvo petición explícita de implementación completa.
 
 ## Estado técnico comprobado
 
-- Proyecto mínimo de Cargo preparado, sin dependencias externas.
+- Proyecto de Cargo modularizado, sin dependencias externas.
 - Toolchain estable instalada: Rust 1.98.0.
-- Tipos `Vector2D` y `Particle` definidos en `src/main.rs`.
-- `Vector2D` cuenta con `Copy`, `Clone`, métodos `module`, `module_squared`, `scalar_prod`, `unit`, e implementaciones completas de `std::ops` (incluyendo `AddAssign` y `SubAssign`).
-- Funciones de cálculo `electric_field_ch_point` (con singularidad blindada) y `total_electric_field` implementadas.
-- Módulo de pruebas unitarias con 15 pruebas pasando al 100%, verificando álgebra, asignación compuesta, ley del inverso del cuadrado, campo nulo interior y cancelación por superposición.
+- `Vector2D` aislado en `src/math.rs` con `Copy`, `Clone`, métodos propios e implementaciones completas de `std::ops`.
+- `Particle` y funciones de cálculo (`electric_field_ch_point` y `total_electric_field`) aisladas en `src/physics.rs`.
+- `src/main.rs` conectando ambos módulos (`mod math; mod physics;`).
+- Módulo de pruebas unitarias con 15 pruebas pasando al 100% (11 en `math` y 4 en `physics`), con aserciones protegidas mediante `abs()`.
 - No se ha añadido Raylib.
 
 ## Siguiente paso
 
-Iniciar la fase gráfica (punto 4 del alcance): evaluar la integración con Raylib y el diseño de la conversión de coordenadas del mundo físico a píxeles en pantalla.
+Iniciar la fase gráfica (punto 4 del alcance): diseñar la función pura de transformación de coordenadas del espacio físico (metros) a coordenadas de pantalla (píxeles), antes de integrar la ventana de Raylib.
 
 ## Fuera del alcance actual
 
@@ -96,3 +97,4 @@ Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
 - **2026-09-06 (sesión 4):** se diseñó e implementó la prueba de la ley del inverso del cuadrado (`test_inverse_sq_electric_field`), validando que al duplicar la distancia la intensidad cae a la cuarta parte. Se consolidó el uso del atributo `#[test]` y el blindaje con `abs()` en aserciones de coma flotante. 11 pruebas unitarias en verde.
 - **2026-09-06 (sesión 5):** se añadió el campo `radius` a `Particle` y se gestionó la singularidad en `electric_field_ch_point` devolviendo vector nulo cuando $r \le R$. Se añadió la prueba unitaria `test_electric_field_null` verificando el comportamiento en el origen `(0.0, 0.0)`. 12 pruebas unitarias en verde.
 - **2026-09-06 (sesión 6):** se implementaron `AddAssign` y `SubAssign` para `Vector2D`. Se creó la función `total_electric_field` y se validó la cancelación del campo por superposición en `test_total_electric_field`. 15 pruebas unitarias en verde.
+- **2026-09-07:** se blindaron las aserciones de pruebas con `abs()`. Se flexibilizó `total_electric_field` con rodajas `&[Particle]`. Se modularizó el proyecto extrayendo `src/math.rs` (álgebra vectorial pura y 11 tests) y `src/physics.rs` (dominio electrostático y 4 tests), conectados mediante `crate::math` y visibilidad explícita (`pub`). 15 pruebas unitarias verificadas en verde.
