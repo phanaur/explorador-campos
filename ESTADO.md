@@ -4,7 +4,7 @@
 
 ## Fase actual
 
-Modelo físico y matemático modularizado y refinado. Módulo independiente `math` (`Vector2D` con álgebra completa, `Copy`, `unit` y 11 pruebas) y módulo `physics` (`Particle`, ley de Coulomb blindada, superposición con `total_electric_field` sobre rodajas `&[Particle]` y 4 pruebas). 15 pruebas unitarias activas y verificadas por módulo.
+Transición a la fase gráfica iniciada. Núcleo matemático (`src/math.rs`), núcleo físico (`src/physics.rs`) y módulo de proyección de coordenadas a pantalla (`src/screen.rs`, función `world_to_screen`) completados y desacoplados. 16 pruebas unitarias activas y verificadas.
 
 ## Objetivo acordado
 
@@ -38,7 +38,7 @@ si se continúa, se cierra o se redefine el proyecto.
   modelo de dibujo es sencillo y el usuario ya lo conoce.
 - **Diseño inicial:** cálculo físico puro antes que representación gráfica.
 - **Modularización y separación de responsabilidades:** división explícita del código en `math.rs` (herramienta matemática abstracta reutilizable) y `physics.rs` (dominio físico electrostático que consume `crate::math`), manteniendo `main.rs` como orquestador y punto de entrada limpio.
-- **Sistema de coordenadas:** cartesianas 2D para el espacio físico, independientes de la pantalla. La conversión a píxeles (zoom, desplazamiento) se delega a la capa gráfica futura.
+- **Sistema de coordenadas y proyección desacoplada:** coordenadas cartesianas 2D para el espacio físico en metros. Función pura `world_to_screen` en `src/screen.rs` que invierte el eje $Y$, escala y traslada el origen al centro de la pantalla en píxeles. Se mantiene independiente de librerías gráficas externas, delegando la conversión al tipo de la GPU a la frontera de dibujo.
 - **Unidades:** Sistema Internacional (metros, culombios, newtons por culombio).
 - **Representación de carga:** posición 2D y valor escalar con signo en el propio dato numérico, evitando banderas o condicionales.
 - **Tipos de dominio iniciales:** estructura con campos nombrados `Vector2D` (`x: f64`, `y: f64`) para posiciones y vectores en el plano, y `Particle` (`mass: f64`, `pos: Vector2D`, `charge: f64`).
@@ -58,13 +58,14 @@ si se continúa, se cierra o se redefine el proyecto.
 - Toolchain estable instalada: Rust 1.98.0.
 - `Vector2D` aislado en `src/math.rs` con `Copy`, `Clone`, métodos propios e implementaciones completas de `std::ops`.
 - `Particle` y funciones de cálculo (`electric_field_ch_point` y `total_electric_field`) aisladas en `src/physics.rs`.
-- `src/main.rs` conectando ambos módulos (`mod math; mod physics;`).
-- Módulo de pruebas unitarias con 15 pruebas pasando al 100% (11 en `math` y 4 en `physics`), con aserciones protegidas mediante `abs()`.
+- Función de proyección `world_to_screen` implementada y probada en `src/screen.rs`.
+- `src/main.rs` conectando los módulos (`mod math; mod physics; mod screen;`).
+- Módulo de pruebas unitarias con 16 pruebas pasando al 100% (11 en `math`, 4 en `physics`, 1 en `screen`), con aserciones protegidas mediante `abs()`.
 - No se ha añadido Raylib.
 
 ## Siguiente paso
 
-Iniciar la fase gráfica (punto 4 del alcance): diseñar la función pura de transformación de coordenadas del espacio físico (metros) a coordenadas de pantalla (píxeles), antes de integrar la ventana de Raylib.
+Integrar la dependencia de Raylib en `Cargo.toml`, verificar el enlazado del sistema y abrir la primera ventana gráfica básica para dibujar una partícula proyectada en pantalla.
 
 ## Fuera del alcance actual
 
@@ -79,7 +80,6 @@ Iniciar la fase gráfica (punto 4 del alcance): diseñar la función pura de tra
 
 ## Preguntas aplazadas
 
-- Cómo transformar coordenadas físicas en coordenadas de pantalla.
 - Qué escala visual usar para campos con módulos muy diferentes.
 - Si se representará primero el vector, el módulo mediante color o ambos.
 
@@ -98,3 +98,4 @@ Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
 - **2026-09-06 (sesión 5):** se añadió el campo `radius` a `Particle` y se gestionó la singularidad en `electric_field_ch_point` devolviendo vector nulo cuando $r \le R$. Se añadió la prueba unitaria `test_electric_field_null` verificando el comportamiento en el origen `(0.0, 0.0)`. 12 pruebas unitarias en verde.
 - **2026-09-06 (sesión 6):** se implementaron `AddAssign` y `SubAssign` para `Vector2D`. Se creó la función `total_electric_field` y se validó la cancelación del campo por superposición en `test_total_electric_field`. 15 pruebas unitarias en verde.
 - **2026-09-07:** se blindaron las aserciones de pruebas con `abs()`. Se flexibilizó `total_electric_field` con rodajas `&[Particle]`. Se modularizó el proyecto extrayendo `src/math.rs` (álgebra vectorial pura y 11 tests) y `src/physics.rs` (dominio electrostático y 4 tests), conectados mediante `crate::math` y visibilidad explícita (`pub`). 15 pruebas unitarias verificadas en verde.
+- **2026-09-07 (sesión 2):** se diseñó e implementó la función pura de proyección de coordenadas `world_to_screen` en `src/screen.rs`, resolviendo el cambio de signo en $Y$, el escalado y el centrado en pantalla. Se contrastó el modelo de memoria de Rust con C# (cero coste de abstracción en tipos `Copy` en la pila). 16 pruebas unitarias verificadas en verde.
