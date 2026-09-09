@@ -4,7 +4,7 @@
 
 ## Fase actual
 
-Primera partícula fija y un segmento orientado según su campo eléctrico dibujados con Macroquad. El campo se evalúa en el origen y se normaliza para darle una longitud visual fija de 40 píxeles. Las transformaciones puras están implementadas en ambos sentidos entre coordenadas físicas y de pantalla. Núcleo matemático (`src/math.rs`), núcleo físico (`src/physics.rs`) y proyección (`src/screen.rs`) permanecen desacoplados. 18 pruebas unitarias verificadas.
+Cuadrícula dinámica de vectores orientados de longitud fija representando el campo eléctrico de una partícula fija dibujada con Macroquad. El espacio visible se deduce transformando las esquinas de pantalla a mundo con `screen_to_world`, barriendo en pasos físicos de 2 m con dos bucles `while` anidados. Núcleo matemático (`src/math.rs`), núcleo físico (`src/physics.rs`) y proyección (`src/screen.rs`) permanecen desacoplados. 18 pruebas unitarias verificadas.
 
 ## Objetivo acordado
 
@@ -21,7 +21,7 @@ obligación de convertirse en un producto terminado o en material de portfolio.
 2. Calcular el campo eléctrico en un punto mediante una función pura.
 3. Comprobar con pruebas casos de simetría, cancelación y ley del inverso del
    cuadrado.
-4. Dibujar una cuadrícula de vectores para una carga fija.
+4. Dibujar una cuadrícula de vectores para una carga fija. (Completado)
 5. Permitir mover esa carga con el ratón.
 6. Añadir una segunda carga y revisar lo aprendido.
 
@@ -51,6 +51,7 @@ si se continúa, se cierra o se redefine el proyecto.
 - **Pruebas de coma flotante:** validación con tolerancia (épsilon) y diferencia absoluta (`abs`) o módulo euclídeo (`module()`) con `assert!`, evitando la igualdad estricta de `assert_eq!`.
 - **Modelo de partícula y singularidad:** `Particle` incorpora `radius: f64` modelando una corteza esférica delgada. Para distancias al cuadrado menores o iguales al radio al cuadrado ($r^2 \le R^2$), `electric_field_ch_point` retorna un vector nulo (`Vector2D { x: 0.0, y: 0.0 }`). Esto resuelve la singularidad en $r = 0$ y evita divisiones por cero (`NaN`/`inf`) sin introducir raíces cuadradas adicionales.
 - **Superposición electrostática y colecciones:** función pura `total_electric_field` desacoplada del contenedor mediante una rodaja (`&[Particle]`), permitiendo evaluar campos sobre cualquier secuencia contigua sin exigir la propiedad de un `Vec`.
+- **Muestreo en cuadrícula de paso fijo:** paso físico fijo de 2 m evaluando dinámicamente los límites del mundo visibles a partir de la esquina inferior derecha de la pantalla y la simetría central. Se evalúan y dibujan en modo inmediato en cada fotograma.
 - **Forma de trabajo:** un lenguaje y un cambio conceptual cada vez; la IA
   actuará como tutora salvo petición explícita de implementación completa.
 
@@ -63,16 +64,12 @@ si se continúa, se cierra o se redefine el proyecto.
 - Funciones puras `world_to_screen` y `screen_to_world` implementadas y probadas en `src/screen.rs`.
 - `src/main.rs` conectando los módulos (`mod math; mod physics; mod screen;`).
 - Módulo de pruebas unitarias con 18 pruebas pasando al 100% (11 en `math`, 4 en `physics`, 3 en `screen`), con comparaciones mediante diferencias absolutas o módulos vectoriales.
-- La proyección se comprueba en el origen y en el punto (3, 2) m, que con una ventana de 800 × 600 píxeles y escala de 20 píxeles por metro se transforma en (460, 260) píxeles.
-- La transformación inversa se comprueba con el caso (460, 260) píxeles → (3, 2) m para la misma ventana y escala.
-- `src/main.rs` contiene una única función principal decorada con la macro de Macroquad. Mantiene una partícula fija fuera del bucle y, en cada fotograma, consulta el tamaño actual de la ventana, proyecta su posición y dibuja su radio físico convertido a píxeles.
-- El primer muestreo visual evalúa el campo en (0, 0) m, normaliza el resultado y calcula el extremo como punto de muestreo más desplazamiento. La longitud dibujada no depende del módulo físico del campo.
-- `world_to_screen` recibe las dimensiones de pantalla como `f32`, igual que las devuelve Macroquad, y mantiene sus cálculos y su resultado en `f64`.
-- `cargo fmt --check`, `cargo check`, `cargo test` y `cargo clippy` terminan correctamente con este arranque. Persisten advertencias de elementos e importaciones sin usar.
+- Barrido de pantalla implementado mediante bucles `while` anidados en `src/main.rs`, evaluando el campo con paso de 2 m y dibujando segmentos normalizados de 40 px.
+- `cargo fmt --check`, `cargo check`, `cargo test` y `cargo clippy` terminan correctamente. Persisten advertencias de elementos e importaciones sin usar.
 
 ## Siguiente paso
 
-Evitar la normalización de un campo nulo antes de extender el dibujo a varios puntos de muestreo.
+Permitir mover la carga fija con el ratón.
 
 ## Fuera del alcance actual
 
@@ -113,3 +110,4 @@ Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
 - **2026-09-09 (primera partícula):** el usuario creó una partícula fija fuera del bucle y la dibujó tras proyectar su posición en cada fotograma. Detectó y corrigió que el radio físico también debía multiplicarse por la escala para obtener píxeles. Se verificaron formato, compilación, 17 pruebas y Clippy; persisten advertencias por partes del núcleo físico todavía no usadas en la aplicación.
 - **2026-09-09 (transformación inversa):** el usuario dedujo e implementó `screen_to_world` y añadió una prueba para recuperar (3, 2) m desde (460, 260) píxeles con una ventana de 800 × 600 y escala 20 px/m. Formato, compilación, 18 pruebas y Clippy verificados; la función aún no se usa desde la aplicación.
 - **2026-09-09 (primer vector de campo):** el usuario conectó `electric_field_ch_point` con la representación gráfica. Corrigió el uso inicial del campo sin normalizar y sumó el punto de muestreo al desplazamiento para obtener el extremo absoluto. Se verificaron formato, compilación, 18 pruebas y Clippy; persisten advertencias por elementos aún no utilizados.
+- **2026-09-09 (cuadrícula de vectores):** el usuario implementó el muestreo en cuadrícula mediante dos bucles `while` anidados con paso físico fijo de 2 m. El rango visible se calcula proyectando la esquina inferior derecha con `screen_to_world` y aprovechando la simetría respecto al centro. Se evalúa y dibuja en cada punto la dirección del campo eléctrico mediante un segmento orientado de 40 px. Formato, compilación, 18 pruebas y Clippy verificados; persisten advertencias por elementos no usados.

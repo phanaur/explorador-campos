@@ -15,7 +15,7 @@ use physics::{Particle, electric_field_ch_point, total_electric_field};
 mod screen;
 use macroquad::prelude::*;
 
-use crate::screen::world_to_screen;
+use crate::screen::{screen_to_world, world_to_screen};
 
 #[macroquad::main("BasicShapes")]
 async fn main() {
@@ -41,27 +41,45 @@ async fn main() {
             WHITE,
         );
 
-        let point: Vector2D = Vector2D { x: 0_f64, y: 0_f64 };
+        let cuad: Vector2D = screen_to_world(
+            Vector2D {
+                x: width as f64,
+                y: height as f64,
+            },
+            width,
+            height,
+            scale,
+        );
+        let mut x = -cuad.x;
+        let mut y = cuad.y;
+        while y < -cuad.y {
+            while x < cuad.x {
+                let point: Vector2D = Vector2D { x, y };
 
-        let field_in_point: Vector2D = electric_field_ch_point(&part, point);
+                let field_in_point: Vector2D = electric_field_ch_point(&part, point);
 
-        if field_in_point.module() != 0.0 {
-            let field_in_point_dir: Vector2D = field_in_point.unit();
+                if field_in_point.module() != 0.0 {
+                    let field_in_point_dir: Vector2D = field_in_point.unit();
 
-            let end_arrow_field: Vector2D = field_in_point_dir * 40_f64 / scale + point;
+                    let end_arrow_field: Vector2D = field_in_point_dir * 40_f64 / scale + point;
 
-            let point_scr: Vector2D = world_to_screen(point, width, height, scale);
-            let end_arrow_field_src: Vector2D =
-                world_to_screen(end_arrow_field, width, height, scale);
+                    let point_scr: Vector2D = world_to_screen(point, width, height, scale);
+                    let end_arrow_field_src: Vector2D =
+                        world_to_screen(end_arrow_field, width, height, scale);
 
-            draw_line(
-                point_scr.x as f32,
-                point_scr.y as f32,
-                end_arrow_field_src.x as f32,
-                end_arrow_field_src.y as f32,
-                4_f32,
-                GREEN,
-            );
+                    draw_line(
+                        point_scr.x as f32,
+                        point_scr.y as f32,
+                        end_arrow_field_src.x as f32,
+                        end_arrow_field_src.y as f32,
+                        3.0,
+                        WHITE,
+                    );
+                }
+                x += 2_f64;
+            }
+            x = -cuad.x;
+            y += 2_f64;
         }
 
         next_frame().await
