@@ -1,10 +1,10 @@
 # Estado del proyecto
 
-Última actualización: 2026-09-07
+Última actualización: 2026-09-09
 
 ## Fase actual
 
-Transición a la fase gráfica iniciada. Núcleo matemático (`src/math.rs`), núcleo físico (`src/physics.rs`) y módulo de proyección de coordenadas a pantalla (`src/screen.rs`, función `world_to_screen`) completados y desacoplados. 16 pruebas unitarias activas y verificadas.
+Primera partícula fija y un segmento orientado según su campo eléctrico dibujados con Macroquad. El campo se evalúa en el origen y se normaliza para darle una longitud visual fija de 40 píxeles. Las transformaciones puras están implementadas en ambos sentidos entre coordenadas físicas y de pantalla. Núcleo matemático (`src/math.rs`), núcleo físico (`src/physics.rs`) y proyección (`src/screen.rs`) permanecen desacoplados. 18 pruebas unitarias verificadas.
 
 ## Objetivo acordado
 
@@ -34,8 +34,10 @@ si se continúa, se cierra o se redefine el proyecto.
   Cargo y el interés del usuario por comprender propiedad y referencias.
 - **Formato:** aplicación de escritorio autocontenida. No se comenzará por la
   web para evitar mezclar lenguajes y plataformas.
-- **Representación prevista:** Raylib cuando llegue la fase gráfica, porque su
-  modelo de dibujo es sencillo y el usuario ya lo conoce.
+- **Representación elegida:** Macroquad sustituye a la opción inicial de Raylib.
+  El usuario prefiere su integración con Cargo y evitar la compilación de la
+  biblioteca C de Raylib. El arranque usa la macro de entrada y el uso mínimo de
+  `async`/`await` para avanzar entre fotogramas, sin introducir otras tareas asíncronas.
 - **Diseño inicial:** cálculo físico puro antes que representación gráfica.
 - **Modularización y separación de responsabilidades:** división explícita del código en `math.rs` (herramienta matemática abstracta reutilizable) y `physics.rs` (dominio físico electrostático que consume `crate::math`), manteniendo `main.rs` como orquestador y punto de entrada limpio.
 - **Sistema de coordenadas y proyección desacoplada:** coordenadas cartesianas 2D para el espacio físico en metros. Función pura `world_to_screen` en `src/screen.rs` que invierte el eje $Y$, escala y traslada el origen al centro de la pantalla en píxeles. Se mantiene independiente de librerías gráficas externas, delegando la conversión al tipo de la GPU a la frontera de dibujo.
@@ -54,18 +56,23 @@ si se continúa, se cierra o se redefine el proyecto.
 
 ## Estado técnico comprobado
 
-- Proyecto de Cargo modularizado, sin dependencias externas.
+- Proyecto de Cargo modularizado, con Macroquad declarado como dependencia externa (`0.4.16` en `Cargo.toml`) y `Cargo.lock` actualizado.
 - Toolchain estable instalada: Rust 1.98.0.
 - `Vector2D` aislado en `src/math.rs` con `Copy`, `Clone`, métodos propios e implementaciones completas de `std::ops`.
 - `Particle` y funciones de cálculo (`electric_field_ch_point` y `total_electric_field`) aisladas en `src/physics.rs`.
-- Función de proyección `world_to_screen` implementada y probada en `src/screen.rs`.
+- Funciones puras `world_to_screen` y `screen_to_world` implementadas y probadas en `src/screen.rs`.
 - `src/main.rs` conectando los módulos (`mod math; mod physics; mod screen;`).
-- Módulo de pruebas unitarias con 16 pruebas pasando al 100% (11 en `math`, 4 en `physics`, 1 en `screen`), con aserciones protegidas mediante `abs()`.
-- No se ha añadido Raylib.
+- Módulo de pruebas unitarias con 18 pruebas pasando al 100% (11 en `math`, 4 en `physics`, 3 en `screen`), con comparaciones mediante diferencias absolutas o módulos vectoriales.
+- La proyección se comprueba en el origen y en el punto (3, 2) m, que con una ventana de 800 × 600 píxeles y escala de 20 píxeles por metro se transforma en (460, 260) píxeles.
+- La transformación inversa se comprueba con el caso (460, 260) píxeles → (3, 2) m para la misma ventana y escala.
+- `src/main.rs` contiene una única función principal decorada con la macro de Macroquad. Mantiene una partícula fija fuera del bucle y, en cada fotograma, consulta el tamaño actual de la ventana, proyecta su posición y dibuja su radio físico convertido a píxeles.
+- El primer muestreo visual evalúa el campo en (0, 0) m, normaliza el resultado y calcula el extremo como punto de muestreo más desplazamiento. La longitud dibujada no depende del módulo físico del campo.
+- `world_to_screen` recibe las dimensiones de pantalla como `f32`, igual que las devuelve Macroquad, y mantiene sus cálculos y su resultado en `f64`.
+- `cargo fmt --check`, `cargo check`, `cargo test` y `cargo clippy` terminan correctamente con este arranque. Persisten advertencias de elementos e importaciones sin usar.
 
 ## Siguiente paso
 
-Integrar la dependencia de Raylib en `Cargo.toml`, verificar el enlazado del sistema y abrir la primera ventana gráfica básica para dibujar una partícula proyectada en pantalla.
+Evitar la normalización de un campo nulo antes de extender el dibujo a varios puntos de muestreo.
 
 ## Fuera del alcance actual
 
@@ -99,3 +106,10 @@ Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
 - **2026-09-06 (sesión 6):** se implementaron `AddAssign` y `SubAssign` para `Vector2D`. Se creó la función `total_electric_field` y se validó la cancelación del campo por superposición en `test_total_electric_field`. 15 pruebas unitarias en verde.
 - **2026-09-07:** se blindaron las aserciones de pruebas con `abs()`. Se flexibilizó `total_electric_field` con rodajas `&[Particle]`. Se modularizó el proyecto extrayendo `src/math.rs` (álgebra vectorial pura y 11 tests) y `src/physics.rs` (dominio electrostático y 4 tests), conectados mediante `crate::math` y visibilidad explícita (`pub`). 15 pruebas unitarias verificadas en verde.
 - **2026-09-07 (sesión 2):** se diseñó e implementó la función pura de proyección de coordenadas `world_to_screen` en `src/screen.rs`, resolviendo el cambio de signo en $Y$, el escalado y el centrado en pantalla. Se contrastó el modelo de memoria de Rust con C# (cero coste de abstracción en tipos `Copy` en la pila). 16 pruebas unitarias verificadas en verde.
+- **2026-09-09:** el usuario añadió una prueba de proyección fuera del origen y corrigió la comparación de tolerancia aplicando `abs()` a ambas componentes. 17 pruebas pasando y formato verificado tras la corrección. `cargo check` y `cargo clippy` finalizaron correctamente en la revisión previa; persisten advertencias de elementos e importaciones sin usar. Se verificó también la corrección de los enlaces `CHATGPT.md` y `CLAUDE.md` a `GEMINI.md`.
+- **2026-09-09 (elección gráfica):** tras comparar Raylib, Macroquad y ggez, el usuario eligió Macroquad por su integración con Cargo y para evitar la compilación de Raylib en C. Se actualizaron las instrucciones del proyecto; la dependencia y la ventana siguen pendientes.
+- **2026-09-09 (dependencia gráfica):** el usuario añadió Macroquad mediante Cargo. Se verificaron los cambios en `Cargo.toml` y `Cargo.lock` y la finalización correcta de `cargo build`, con las advertencias de elementos sin usar ya existentes. La apertura de la ventana sigue pendiente.
+- **2026-09-09 (primera ventana):** el usuario implementó el bucle gráfico y simplificó el arranque a una única función principal decorada con la macro de Macroquad, tras distinguir entre definir y llamar a una función. Confirmó apertura y cierre normales. Formato, comprobación, 17 pruebas y Clippy verificados con la estructura final, con advertencias de elementos sin usar.
+- **2026-09-09 (primera partícula):** el usuario creó una partícula fija fuera del bucle y la dibujó tras proyectar su posición en cada fotograma. Detectó y corrigió que el radio físico también debía multiplicarse por la escala para obtener píxeles. Se verificaron formato, compilación, 17 pruebas y Clippy; persisten advertencias por partes del núcleo físico todavía no usadas en la aplicación.
+- **2026-09-09 (transformación inversa):** el usuario dedujo e implementó `screen_to_world` y añadió una prueba para recuperar (3, 2) m desde (460, 260) píxeles con una ventana de 800 × 600 y escala 20 px/m. Formato, compilación, 18 pruebas y Clippy verificados; la función aún no se usa desde la aplicación.
+- **2026-09-09 (primer vector de campo):** el usuario conectó `electric_field_ch_point` con la representación gráfica. Corrigió el uso inicial del campo sin normalizar y sumó el punto de muestreo al desplazamiento para obtener el extremo absoluto. Se verificaron formato, compilación, 18 pruebas y Clippy; persisten advertencias por elementos aún no utilizados.

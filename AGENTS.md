@@ -63,8 +63,10 @@ fuente de verdad sobre el punto actual del proyecto y el siguiente paso.
 - Documenta unidades, sistema de coordenadas y convenciones de signos.
 - Evita inicialmente `unsafe`, asincronía, hilos, ECS, GPU, web y arquitecturas
   complejas.
-- Raylib es la opción prevista para la primera visualización, pero no debe
-  añadirse hasta que el núcleo físico mínimo esté probado.
+- Macroquad es la opción elegida para la primera visualización, una vez
+  probado el núcleo físico mínimo. Su macro de entrada y el uso de
+  `async`/`await` para avanzar entre fotogramas se explicarán cuando se
+  introduzcan; esta excepción no amplía el alcance a otras tareas asíncronas.
 - La apariencia sirve para comprobar el comportamiento; el acabado visual no es
   un criterio de éxito en la primera etapa.
 - No uses datos reales o identificables de alumnos. Nunca guardes secretos,
