@@ -4,7 +4,7 @@
 
 ## Fase actual
 
-Cuadrícula dinámica de vectores orientados de longitud fija representando el campo eléctrico de una partícula fija dibujada con Macroquad. El espacio visible se deduce transformando las esquinas de pantalla a mundo con `screen_to_world`, barriendo en pasos físicos de 2 m con dos bucles `while` anidados. Núcleo matemático (`src/math.rs`), núcleo físico (`src/physics.rs`) y proyección (`src/screen.rs`) permanecen desacoplados. 18 pruebas unitarias verificadas.
+Cuadrícula densa de vectores orientados con gradiente de color logarítmico (HSL de azul a rojo según la intensidad del campo eléctrico) para una partícula fija dibujada con Macroquad. El espacio visible se deduce dinámicamente con `screen_to_world`, barriendo en pasos físicos de 0.5 m con segmentos de 5 px. Núcleo matemático (`src/math.rs`), núcleo físico (`src/physics.rs`) y proyección (`src/screen.rs`) permanecen desacoplados. 18 pruebas unitarias verificadas.
 
 ## Objetivo acordado
 
@@ -21,7 +21,7 @@ obligación de convertirse en un producto terminado o en material de portfolio.
 2. Calcular el campo eléctrico en un punto mediante una función pura.
 3. Comprobar con pruebas casos de simetría, cancelación y ley del inverso del
    cuadrado.
-4. Dibujar una cuadrícula de vectores para una carga fija. (Completado)
+4. Dibujar una cuadrícula de vectores para una carga fija. (Completado con gradiente de color)
 5. Permitir mover esa carga con el ratón.
 6. Añadir una segunda carga y revisar lo aprendido.
 
@@ -51,7 +51,9 @@ si se continúa, se cierra o se redefine el proyecto.
 - **Pruebas de coma flotante:** validación con tolerancia (épsilon) y diferencia absoluta (`abs`) o módulo euclídeo (`module()`) con `assert!`, evitando la igualdad estricta de `assert_eq!`.
 - **Modelo de partícula y singularidad:** `Particle` incorpora `radius: f64` modelando una corteza esférica delgada. Para distancias al cuadrado menores o iguales al radio al cuadrado ($r^2 \le R^2$), `electric_field_ch_point` retorna un vector nulo (`Vector2D { x: 0.0, y: 0.0 }`). Esto resuelve la singularidad en $r = 0$ y evita divisiones por cero (`NaN`/`inf`) sin introducir raíces cuadradas adicionales.
 - **Superposición electrostática y colecciones:** función pura `total_electric_field` desacoplada del contenedor mediante una rodaja (`&[Particle]`), permitiendo evaluar campos sobre cualquier secuencia contigua sin exigir la propiedad de un `Vec`.
-- **Muestreo en cuadrícula de paso fijo:** paso físico fijo de 2 m evaluando dinámicamente los límites del mundo visibles a partir de la esquina inferior derecha de la pantalla y la simetría central. Se evalúan y dibujan en modo inmediato en cada fotograma.
+- **Muestreo en cuadrícula de paso fijo:** límites del mundo calculados dinámicamente según la ventana con `screen_to_world`. Se evalúan y dibujan en modo inmediato en cada fotograma.
+- **Gradiente de color logarítmico (HSL):** representación de la magnitud del campo mediante `hsl_to_rgb` con saturación 1.0 y luminosidad 0.5. El tono varía entre 0.66 (azul, campo débil) y 0.0 (rojo, campo intenso) normalizando el logaritmo del módulo acotado con `clamp`.
+- **Muestreo denso de visualización:** paso físico de 0.5 m y longitud de segmento de 5 px para lograr resolución visual adecuada sin solapamientos.
 - **Forma de trabajo:** un lenguaje y un cambio conceptual cada vez; la IA
   actuará como tutora salvo petición explícita de implementación completa.
 
@@ -64,12 +66,12 @@ si se continúa, se cierra o se redefine el proyecto.
 - Funciones puras `world_to_screen` y `screen_to_world` implementadas y probadas en `src/screen.rs`.
 - `src/main.rs` conectando los módulos (`mod math; mod physics; mod screen;`).
 - Módulo de pruebas unitarias con 18 pruebas pasando al 100% (11 en `math`, 4 en `physics`, 3 en `screen`), con comparaciones mediante diferencias absolutas o módulos vectoriales.
-- Barrido de pantalla implementado mediante bucles `while` anidados en `src/main.rs`, evaluando el campo con paso de 2 m y dibujando segmentos normalizados de 40 px.
+- Barrido denso implementado en `src/main.rs` con paso de 0.5 m, evaluando el campo y coloreando los segmentos en degradado HSL logarítmico.
 - `cargo fmt --check`, `cargo check`, `cargo test` y `cargo clippy` terminan correctamente. Persisten advertencias de elementos e importaciones sin usar.
 
 ## Siguiente paso
 
-Permitir mover la carga fija con el ratón.
+Extraer constantes mágicas de visualización y permitir mover la carga fija con el ratón.
 
 ## Fuera del alcance actual
 
@@ -84,10 +86,7 @@ Permitir mover la carga fija con el ratón.
 
 ## Preguntas aplazadas
 
-- Qué escala visual usar para campos con módulos muy diferentes.
-- Si se representará primero el vector, el módulo mediante color o ambos.
-
-Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
+- Si se añadirá geometría de punta de flecha a los segmentos o se mantendrán como líneas de dirección con color.
 
 ## Registro de sesiones
 
@@ -111,3 +110,4 @@ Estas preguntas no deben resolverse hasta que afecten al siguiente paso.
 - **2026-09-09 (transformación inversa):** el usuario dedujo e implementó `screen_to_world` y añadió una prueba para recuperar (3, 2) m desde (460, 260) píxeles con una ventana de 800 × 600 y escala 20 px/m. Formato, compilación, 18 pruebas y Clippy verificados; la función aún no se usa desde la aplicación.
 - **2026-09-09 (primer vector de campo):** el usuario conectó `electric_field_ch_point` con la representación gráfica. Corrigió el uso inicial del campo sin normalizar y sumó el punto de muestreo al desplazamiento para obtener el extremo absoluto. Se verificaron formato, compilación, 18 pruebas y Clippy; persisten advertencias por elementos aún no utilizados.
 - **2026-09-09 (cuadrícula de vectores):** el usuario implementó el muestreo en cuadrícula mediante dos bucles `while` anidados con paso físico fijo de 2 m. El rango visible se calcula proyectando la esquina inferior derecha con `screen_to_world` y aprovechando la simetría respecto al centro. Se evalúa y dibuja en cada punto la dirección del campo eléctrico mediante un segmento orientado de 40 px. Formato, compilación, 18 pruebas y Clippy verificados; persisten advertencias por elementos no usados.
+- **2026-09-09 (gradiente logarítmico HSL):** el usuario implementó el coloreado del campo mediante una escala logarítmica normalizada mapeada al tono HSL (azul en campo débil, rojo en campo intenso). Se refinó la cuadrícula a un paso de 0.5 m con segmentos de 5 px y se calcularon los extremos fuera del bucle. Formato, compilación, 18 pruebas y Clippy verificados; persisten advertencias por elementos no usados.

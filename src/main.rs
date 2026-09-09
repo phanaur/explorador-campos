@@ -13,7 +13,7 @@ use math::Vector2D;
 mod physics;
 use physics::{Particle, electric_field_ch_point, total_electric_field};
 mod screen;
-use macroquad::prelude::*;
+use macroquad::{color::hsl_to_rgb, prelude::*};
 
 use crate::screen::{screen_to_world, world_to_screen};
 
@@ -25,6 +25,16 @@ async fn main() {
         charge: 1e-9,
         radius: 0.5,
     };
+
+    let max_field_value = electric_field_ch_point(
+        &part,
+        Vector2D {
+            x: part.pos.x + part.radius * 1.01,
+            y: part.pos.y,
+        },
+    )
+    .module();
+    let min_field_value = max_field_value / 5e3;
 
     loop {
         clear_background(BLACK);
@@ -61,25 +71,32 @@ async fn main() {
                 if field_in_point.module() != 0.0 {
                     let field_in_point_dir: Vector2D = field_in_point.unit();
 
-                    let end_arrow_field: Vector2D = field_in_point_dir * 40_f64 / scale + point;
+                    let end_arrow_field: Vector2D = field_in_point_dir * 5_f64 / scale + point;
 
                     let point_scr: Vector2D = world_to_screen(point, width, height, scale);
                     let end_arrow_field_src: Vector2D =
                         world_to_screen(end_arrow_field, width, height, scale);
 
+                    let clamp = field_in_point
+                        .module()
+                        .clamp(min_field_value, max_field_value);
+                    let t = (clamp.ln() - min_field_value.ln())
+                        / (max_field_value.ln() - min_field_value.ln());
+                    let color_hue = ((1_f64 - t) * 0.66_f64) as f32;
+                    let color = hsl_to_rgb(color_hue, 1.0, 0.5);
                     draw_line(
                         point_scr.x as f32,
                         point_scr.y as f32,
                         end_arrow_field_src.x as f32,
                         end_arrow_field_src.y as f32,
-                        3.0,
-                        WHITE,
+                        2.0,
+                        color,
                     );
                 }
-                x += 2_f64;
+                x += 0.5_f64;
             }
             x = -cuad.x;
-            y += 2_f64;
+            y += 0.5_f64;
         }
 
         next_frame().await
