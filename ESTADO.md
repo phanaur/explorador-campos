@@ -17,6 +17,11 @@ campo eléctrico de cargas puntuales.
 El proyecto es un medio de aprendizaje y disfrute, sin fecha límite ni
 obligación de convertirse en un producto terminado o en material de portfolio.
 
+El usuario ha indicado (2026-09-11) que, a más largo plazo, este código se
+incorporará a un laboratorio virtual de física más amplio. Esto no introduce
+plazo ni obliga a un acabado concreto ahora: el ritmo sigue siendo "hasta
+estar satisfecho" con cada parte, no una fecha de entrega.
+
 ## Alcance de la primera etapa
 
 1. Representar una carga puntual y una posición en dos dimensiones.
