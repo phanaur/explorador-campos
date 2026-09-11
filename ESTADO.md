@@ -4,7 +4,7 @@
 
 ## Fase actual
 
-Cuadrícula densa de vectores orientados con gradiente de color logarítmico (HSL de azul a rojo según la intensidad del campo eléctrico) para una partícula fija dibujada con Macroquad. El espacio visible se deduce dinámicamente con `screen_to_world`, barriendo en pasos físicos de 0.5 m con segmentos de 5 px. Los parámetros de visualización están extraídos como constantes con unidades explícitas en sus nombres. Núcleo matemático (`src/math.rs`), núcleo físico (`src/physics.rs`) y proyección (`src/screen.rs`) permanecen desacoplados. 18 pruebas unitarias verificadas.
+Cuadrícula densa de vectores orientados con gradiente de color logarítmico (HSL de azul a rojo según la intensidad del campo eléctrico) para una partícula arrastrable con el ratón en Macroquad. Al iniciar el arrastre sobre la partícula, su radio dibujado aumenta mientras el radio físico permanece inalterado. El espacio visible se deduce dinámicamente con `screen_to_world`, barriendo en pasos físicos de 0.5 m con segmentos de 5 px. Los parámetros de visualización están extraídos como constantes con unidades explícitas en sus nombres. Núcleo matemático (`src/math.rs`), núcleo físico (`src/physics.rs`) y proyección (`src/screen.rs`) permanecen desacoplados. 18 pruebas unitarias verificadas.
 
 ## Objetivo acordado
 
@@ -22,7 +22,7 @@ obligación de convertirse en un producto terminado o en material de portfolio.
 3. Comprobar con pruebas casos de simetría, cancelación y ley del inverso del
    cuadrado.
 4. Dibujar una cuadrícula de vectores para una carga fija. (Completado con gradiente de color)
-5. Permitir mover esa carga con el ratón.
+5. Permitir mover esa carga con el ratón. (Completado)
 6. Añadir una segunda carga y revisar lo aprendido.
 
 Al completar el punto 6 se detendrá el desarrollo para decidir conscientemente
@@ -54,6 +54,8 @@ si se continúa, se cierra o se redefine el proyecto.
 - **Muestreo en cuadrícula de paso fijo:** límites del mundo calculados dinámicamente según la ventana con `screen_to_world`. Se evalúan y dibujan en modo inmediato en cada fotograma.
 - **Gradiente de color logarítmico (HSL):** representación de la magnitud del campo mediante `hsl_to_rgb` con saturación 1.0 y luminosidad 0.5. El tono varía entre 0.66 (azul, campo débil) y 0.0 (rojo, campo intenso) normalizando el logaritmo del módulo acotado con `clamp`.
 - **Muestreo denso de visualización:** paso físico de 0.5 m y longitud de segmento de 5 px para lograr resolución visual adecuada sin solapamientos.
+- **Arrastre con el ratón:** el clic inicial sobre la partícula activa un estado `is_dragging`; mientras el botón izquierdo sigue pulsado, su posición se actualiza con el cursor convertido a coordenadas físicas. La liberación termina el arrastre.
+- **Señal visual de arrastre:** durante el arrastre aumenta únicamente el radio usado al dibujar, sin modificar `Particle::radius` ni el cálculo del campo.
 - **Nomenclatura:** identificadores descriptivos en inglés para constantes, API y valores que viven fuera de una fórmula local; unidades incluidas cuando aclaran la interpretación. Se conservan nombres matemáticos breves cuando son convencionales y su alcance es pequeño.
 - **Forma de trabajo:** un lenguaje y un cambio conceptual cada vez; la IA
   actuará como tutora salvo petición explícita de implementación completa.
@@ -69,11 +71,12 @@ si se continúa, se cierra o se redefine el proyecto.
 - Módulo de pruebas unitarias con 18 pruebas pasando al 100% (11 en `math`, 4 en `physics`, 3 en `screen`), con comparaciones mediante diferencias absolutas o módulos vectoriales.
 - Barrido denso implementado en `src/main.rs` con paso de 0.5 m, evaluando el campo y coloreando los segmentos en degradado HSL logarítmico.
 - Constantes de visualización extraídas en `src/main.rs` para hacer explícitas su función y sus unidades.
+- Entrada de ratón conectada en `src/main.rs` mediante los estados de pulsación, mantenimiento y liberación de Macroquad. La carga se puede arrastrar sin perderla al sacar el cursor de su radio.
 - `cargo fmt --check`, `cargo check`, `cargo test` y `cargo clippy` terminan correctamente. Persisten advertencias de elementos e importaciones sin usar.
 
 ## Siguiente paso
 
-Permitir mover la carga fija con el ratón.
+Añadir una segunda carga y adaptar el arrastre para seleccionar cuál se mueve.
 
 ## Fuera del alcance actual
 
@@ -114,3 +117,4 @@ Permitir mover la carga fija con el ratón.
 - **2026-09-09 (cuadrícula de vectores):** el usuario implementó el muestreo en cuadrícula mediante dos bucles `while` anidados con paso físico fijo de 2 m. El rango visible se calcula proyectando la esquina inferior derecha con `screen_to_world` y aprovechando la simetría respecto al centro. Se evalúa y dibuja en cada punto la dirección del campo eléctrico mediante un segmento orientado de 40 px. Formato, compilación, 18 pruebas y Clippy verificados; persisten advertencias por elementos no usados.
 - **2026-09-09 (gradiente logarítmico HSL):** el usuario implementó el coloreado del campo mediante una escala logarítmica normalizada mapeada al tono HSL (azul en campo débil, rojo en campo intenso). Se refinó la cuadrícula a un paso de 0.5 m con segmentos de 5 px y se calcularon los extremos fuera del bucle. Formato, compilación, 18 pruebas y Clippy verificados; persisten advertencias por elementos no usados.
 - **2026-09-11:** se extrajeron las constantes de visualización y se revisó la nomenclatura de `main.rs`, `math.rs`, `physics.rs` y `screen.rs`, sin cambiar el comportamiento. La API matemática usa `magnitude`, `magnitude_squared`, `dot_product` y `normalized`; el campo eléctrico se calcula mediante `electric_field_at_point`. Formato, compilación, 18 pruebas y Clippy verificados; persisten cuatro advertencias por elementos aún no usados.
+- **2026-09-11 (arrastre):** el usuario implementó el movimiento de la partícula mediante un estado persistente entre fotogramas y distinguió `is_mouse_button_pressed`, `is_mouse_button_down` e `is_mouse_button_released`. El arrastre solo comienza sobre la partícula, continúa fuera de su radio hasta soltar y amplía temporalmente su tamaño dibujado sin alterar el radio físico. Se extrajo el dibujo a una función propia. Formato, compilación, 18 pruebas y Clippy verificados; persisten cuatro advertencias anteriores por elementos sin usar.
