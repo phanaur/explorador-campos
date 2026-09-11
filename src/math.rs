@@ -1,7 +1,8 @@
+use std::fmt::Debug;
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
 
 /// En este punto, definimos el tipo matemático Vector2D, así como sus diferentes implementaciones y operaciones
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Vector2D {
     pub x: f64,
     pub y: f64,

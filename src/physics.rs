@@ -12,6 +12,11 @@ pub struct Particle {
     pub radius: f64,
 }
 
+pub struct ElectricFieldPoint {
+    pub point: Vector2D,
+    pub field: Vector2D,
+}
+
 // Función cálculo del campo en un punto
 
 pub fn electric_field_at_point(particle: &Particle, point: Vector2D) -> Vector2D {

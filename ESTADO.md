@@ -4,7 +4,9 @@
 
 ## Fase actual
 
-Cuadrícula densa de vectores orientados con gradiente de color logarítmico (HSL de azul a rojo según la intensidad del campo eléctrico) para una partícula arrastrable con el ratón en Macroquad. Al iniciar el arrastre sobre la partícula, su radio dibujado aumenta mientras el radio físico permanece inalterado. El espacio visible se deduce dinámicamente con `screen_to_world`, barriendo en pasos físicos de 0.5 m con segmentos de 5 px. Los parámetros de visualización están extraídos como constantes con unidades explícitas en sus nombres. Núcleo matemático (`src/math.rs`), núcleo físico (`src/physics.rs`) y proyección (`src/screen.rs`) permanecen desacoplados. 18 pruebas unitarias verificadas.
+Dos partículas simultáneas (`Vec<Particle>`), cada una arrastrable de forma independiente, con cuadrícula densa de vectores orientados y gradiente de color logarítmico (HSL de azul a rojo según la intensidad del campo eléctrico total). El campo de cada punto de la cuadrícula se calcula una sola vez por fotograma y se almacena en un `Vec<ElectricFieldPoint>` (posición y vector de campo), evitando invocar `total_electric_field` dos veces por punto: una primera pasada calcula y guarda, y además determina los extremos reales de magnitud del fotograma para la escala de color; una segunda pasada solo lee esos datos para dibujar. El espacio visible se deduce dinámicamente con `screen_to_world`, barriendo en pasos físicos de 0.5 m con segmentos de 5 px. Núcleo matemático (`src/math.rs`), núcleo físico (`src/physics.rs`) y proyección (`src/screen.rs`) permanecen desacoplados. 18 pruebas unitarias verificadas.
+
+**Con esto se completa el punto 6 del alcance de la primera etapa** («añadir una segunda carga y revisar lo aprendido»), lo que según lo acordado corresponde a un punto de parada consciente: decidir si se continúa, se cierra o se redefine el proyecto. Sesión 2026-09-11: se decide continuar, con el indicador de signo de carga como siguiente paso (ver más abajo).
 
 ## Objetivo acordado
 
@@ -23,7 +25,7 @@ obligación de convertirse en un producto terminado o en material de portfolio.
    cuadrado.
 4. Dibujar una cuadrícula de vectores para una carga fija. (Completado con gradiente de color)
 5. Permitir mover esa carga con el ratón. (Completado)
-6. Añadir una segunda carga y revisar lo aprendido.
+6. Añadir una segunda carga y revisar lo aprendido. (Completado)
 
 Al completar el punto 6 se detendrá el desarrollo para decidir conscientemente
 si se continúa, se cierra o se redefine el proyecto.
@@ -59,6 +61,11 @@ si se continúa, se cierra o se redefine el proyecto.
 - **Nomenclatura:** identificadores descriptivos en inglés para constantes, API y valores que viven fuera de una fórmula local; unidades incluidas cuando aclaran la interpretación. Se conservan nombres matemáticos breves cuando son convencionales y su alcance es pequeño.
 - **Forma de trabajo:** un lenguaje y un cambio conceptual cada vez; la IA
   actuará como tutora salvo petición explícita de implementación completa.
+- **Colección de partículas:** `Vec<Particle>` en vez de un array de tamaño fijo, decidido porque el usuario prevé añadir y quitar partículas en tiempo de ejecución (no solo tener siempre dos).
+- **Identidad de la partícula arrastrada:** no se guarda un id persistente en `Particle`. Basta con hallar la posición (`usize`) dentro del `Vec` en el momento del clic mediante `Vec::iter().position(...)`, envuelta en `Option<usize>` mientras no haya ninguna arrastrada. Elegido explícitamente por el usuario tras valorar que no necesita que esa identidad sobreviva a inserciones o borrados.
+- **Cálculo del campo en dos pasadas:** se prefiere calcular y guardar el vector de campo de cada punto de la cuadrícula (`ElectricFieldPoint { point, field }` en `physics.rs`) en una primera pasada, y usar esos datos ya calculados en la segunda pasada para dibujar, evitando invocar `total_electric_field` dos veces por punto. El usuario eligió esta vía exacta (basada en los extremos reales del fotograma) en vez de la heurística barata (extremo del campo en la superficie de cada partícula), asumiendo el coste de mantener una colección adicional a cambio de una escala de color correcta a cualquier número de partículas.
+- **Exclusión de magnitudes degeneradas en la escala de color:** al buscar los extremos reales de magnitud del fotograma, se descartan los puntos con magnitud `0.0` (zona de exclusión dentro del radio de una partícula) antes de compararlos. Sin esta exclusión, un mínimo de magnitud exactamente `0.0` provoca `ln(0) = -inf`, y la normalización logarítmica de la línea siguiente da como resultado `NaN`, coloreando los segmentos de forma indistinguible del fondo. Se corrigió tras depuración empírica con `println!`, no por lectura estática del código.
+- **Código sugerido por el editor como andamiaje temporal:** el usuario aceptó puntualmente construcciones con iteradores (`iter()`, `map()`, `collect()`, `position()`, `enumerate()`) sugeridas por el editor para comprobar que la lógica de selección y dibujo múltiple funcionaba, con la intención declarada de sustituirlas más adelante por bucles estándar que sepa escribir y explicar sin ayuda. Documentado con comentarios en la cabecera de `main.rs`.
 
 ## Estado técnico comprobado
 
@@ -69,14 +76,14 @@ si se continúa, se cierra o se redefine el proyecto.
 - Funciones puras `world_to_screen` y `screen_to_world` implementadas y probadas en `src/screen.rs`.
 - `src/main.rs` conectando los módulos (`mod math; mod physics; mod screen;`).
 - Módulo de pruebas unitarias con 18 pruebas pasando al 100% (11 en `math`, 4 en `physics`, 3 en `screen`), con comparaciones mediante diferencias absolutas o módulos vectoriales.
-- Barrido denso implementado en `src/main.rs` con paso de 0.5 m, evaluando el campo y coloreando los segmentos en degradado HSL logarítmico.
-- Constantes de visualización extraídas en `src/main.rs` para hacer explícitas su función y sus unidades.
-- Entrada de ratón conectada en `src/main.rs` mediante los estados de pulsación, mantenimiento y liberación de Macroquad. La carga se puede arrastrar sin perderla al sacar el cursor de su radio.
-- `cargo fmt --check`, `cargo check`, `cargo test` y `cargo clippy` terminan correctamente. Persisten advertencias de elementos e importaciones sin usar.
+- `main.rs` maneja ahora `Vec<Particle>` con dos partículas: cuadrícula de campo total calculada y almacenada en `Vec<ElectricFieldPoint>` una vez por fotograma, extremos reales de magnitud (excluyendo `0.0`) para la escala de color, y dibujo de cada partícula y cada segmento a partir de esos datos ya calculados.
+- Arrastre por índice: el clic localiza la partícula bajo el cursor con `position()` sobre un `Vec<bool>` de coincidencias, guarda ese índice en `Option<usize>`, mueve solo esa partícula mientras se mantiene pulsado, y solo agranda su radio de dibujo (no el de las demás).
+- `Vector2D` deriva ahora también `Debug`, incorporado durante la depuración de esta sesión.
+- `cargo fmt --check`, `cargo check` y `cargo test` (18 pruebas) terminan correctamente. `cargo clippy` señala, además de las advertencias previas de elementos sin usar (`dot_product`, `Particle::mass`), tres avisos de estilo nuevos: indentación de la lista de comentarios de cabecera en `main.rs`, uso de `vec![]` en vez de `Vec::new()` + `push()` para las partículas iniciales, y un `if` anidado en la línea 117 que podría colapsarse. Ninguno afecta al comportamiento.
 
 ## Siguiente paso
 
-Añadir una segunda carga y adaptar el arrastre para seleccionar cuál se mueve.
+Añadir un indicador de signo sobre cada partícula (por ejemplo un símbolo o color distinto para carga positiva y negativa), reutilizando el campo `charge` ya existente en `Particle`.
 
 ## Fuera del alcance actual
 
@@ -88,6 +95,8 @@ Añadir una segunda carga y adaptar el arrastre para seleccionar cuál se mueve.
 - Base de datos y datos de alumnos.
 - GPU, paralelismo, arquitectura ECS o acabado visual avanzado.
 - Teoría, unidades didácticas o conversión en un laboratorio completo.
+- Márgenes de pantalla que impidan dibujar en los bordes.
+- Restricción para impedir que dos partículas se solapen o coexistan en la misma posición.
 
 ## Preguntas aplazadas
 
@@ -118,3 +127,4 @@ Añadir una segunda carga y adaptar el arrastre para seleccionar cuál se mueve.
 - **2026-09-09 (gradiente logarítmico HSL):** el usuario implementó el coloreado del campo mediante una escala logarítmica normalizada mapeada al tono HSL (azul en campo débil, rojo en campo intenso). Se refinó la cuadrícula a un paso de 0.5 m con segmentos de 5 px y se calcularon los extremos fuera del bucle. Formato, compilación, 18 pruebas y Clippy verificados; persisten advertencias por elementos no usados.
 - **2026-09-11:** se extrajeron las constantes de visualización y se revisó la nomenclatura de `main.rs`, `math.rs`, `physics.rs` y `screen.rs`, sin cambiar el comportamiento. La API matemática usa `magnitude`, `magnitude_squared`, `dot_product` y `normalized`; el campo eléctrico se calcula mediante `electric_field_at_point`. Formato, compilación, 18 pruebas y Clippy verificados; persisten cuatro advertencias por elementos aún no usados.
 - **2026-09-11 (arrastre):** el usuario implementó el movimiento de la partícula mediante un estado persistente entre fotogramas y distinguió `is_mouse_button_pressed`, `is_mouse_button_down` e `is_mouse_button_released`. El arrastre solo comienza sobre la partícula, continúa fuera de su radio hasta soltar y amplía temporalmente su tamaño dibujado sin alterar el radio físico. Se extrajo el dibujo a una función propia. Formato, compilación, 18 pruebas y Clippy verificados; persisten cuatro advertencias anteriores por elementos sin usar.
+- **2026-09-11 (segunda carga, punto 6 completado):** el usuario pasó de una `Particle` a `Vec<Particle>` con dos cargas, adaptando el arrastre para seleccionar por índice (`Option<usize>` hallado con `position()`) cuál se mueve y cuál agranda su radio de dibujo. Para la escala de color eligió deliberadamente calcular el campo de la cuadrícula en dos pasadas, guardando cada punto y su vector de campo en un `Vec<ElectricFieldPoint>` para no invocar `total_electric_field` dos veces, en vez de una heurística barata basada en el radio de las partículas. Aceptó puntualmente construcciones con iteradores sugeridas por el editor como andamiaje temporal, con la intención declarada de sustituirlas más adelante por bucles estándar, y lo documentó con comentarios en `main.rs`. Varias rondas de revisión (REVISA) detectaron y el usuario corrigió: dos variables sombreadas que anulaban el cálculo (posición de pantalla de las partículas e índice de arrastre), el reseteo de los extremos de magnitud colocado en el punto equivocado del bucle, y el escalado del radio de dibujo aplicado a todas las partículas en vez de solo a la arrastrada. Con depuración empírica (`println!`) se encontró y corrigió un bug no visible por lectura estática: un mínimo de magnitud exactamente `0.0` producía `ln(0) = -inf` y por tanto `NaN` en el color, invisible sobre el fondo negro; se resolvió excluyendo del cálculo de extremos los puntos con magnitud `0.0` (o infinita). Formato, compilación y 18 pruebas verificados; Clippy señala tres avisos de estilo nuevos sin relevancia funcional. Con el punto 6 completado, queda abierto el punto de parada consciente del alcance de la primera etapa; se decide continuar, con el indicador de signo de carga como siguiente paso.
