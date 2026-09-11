@@ -2,37 +2,37 @@
 use crate::math::Vector2D;
 
 /// Constantes universales utilizadas:
-const K: f64 = 8.9875e9; // Nm^2C^{-2}
+const COULOMB_CONSTANT: f64 = 8.9875e9; // Nm^2C^{-2}
 
 /// Struct de Partícula.
 pub struct Particle {
     pub mass: f64,
-    pub pos: Vector2D,
+    pub position: Vector2D,
     pub charge: f64,
     pub radius: f64,
 }
 
 // Función cálculo del campo en un punto
 
-pub fn electric_field_ch_point(part: &Particle, point: Vector2D) -> Vector2D {
-    let distance_vec = point - part.pos;
+pub fn electric_field_at_point(particle: &Particle, point: Vector2D) -> Vector2D {
+    let displacement = point - particle.position;
 
-    let distance_sq = distance_vec.module_squared();
+    let distance_squared = displacement.magnitude_squared();
 
-    if distance_sq <= part.radius.powi(2) {
+    if distance_squared <= particle.radius.powi(2) {
         return Vector2D { x: 0.0, y: 0.0 };
     }
 
-    let distance_unit = distance_vec.unit();
+    let direction = displacement.normalized();
 
-    distance_unit * (K * part.charge / distance_sq)
+    direction * (COULOMB_CONSTANT * particle.charge / distance_squared)
 }
 
-pub fn total_electric_field(part_list: &[Particle], point: Vector2D) -> Vector2D {
+pub fn total_electric_field(particles: &[Particle], point: Vector2D) -> Vector2D {
     let mut total_field: Vector2D = Vector2D { x: 0.0, y: 0.0 };
 
-    for part in part_list {
-        total_field += electric_field_ch_point(part, point);
+    for particle in particles {
+        total_field += electric_field_at_point(particle, point);
     }
     total_field
 }
@@ -43,81 +43,81 @@ mod tests {
 
     #[test]
     fn test_electric_field() {
-        let part = Particle {
+        let particle = Particle {
             mass: 1.0,
-            pos: Vector2D { x: 0.0, y: 0.0 },
+            position: Vector2D { x: 0.0, y: 0.0 },
             charge: 1.0e-9,
             radius: 1_f64,
         };
         let point = Vector2D { x: 3.0, y: 4.0 };
 
-        let e_field = electric_field_ch_point(&part, point);
+        let electric_field = electric_field_at_point(&particle, point);
 
-        let solution: Vector2D = Vector2D {
+        let expected: Vector2D = Vector2D {
             x: (3.0 / 5.0),
             y: (4.0 / 5.0),
         } * (8.9875 / 25.0);
 
-        let result_abs = (e_field - solution).module().abs();
+        let absolute_error = (electric_field - expected).magnitude().abs();
 
-        assert!(result_abs < 0.000001 && e_field.x >= 0.0 && e_field.y >= 0.0);
+        assert!(absolute_error < 0.000001 && electric_field.x >= 0.0 && electric_field.y >= 0.0);
     }
 
     #[test]
-    fn test_inverse_sq_electric_field() {
-        let part = Particle {
+    fn test_inverse_square_electric_field() {
+        let particle = Particle {
             mass: 1.0,
-            pos: Vector2D { x: 0.0, y: 0.0 },
+            position: Vector2D { x: 0.0, y: 0.0 },
             charge: 1.0e-9,
             radius: 1_f64,
         };
         let point_a = Vector2D { x: 3.0, y: 4.0 };
         let point_b = Vector2D { x: 6.0, y: 8.0 };
 
-        let e_field_a_mod = electric_field_ch_point(&part, point_a).module();
-        let e_field_b_mod = electric_field_ch_point(&part, point_b).module();
+        let field_magnitude_a = electric_field_at_point(&particle, point_a).magnitude();
+        let field_magnitude_b = electric_field_at_point(&particle, point_b).magnitude();
 
-        assert!((e_field_a_mod - 4_f64 * e_field_b_mod).abs() < 0.000001);
+        assert!((field_magnitude_a - 4_f64 * field_magnitude_b).abs() < 0.000001);
     }
 
     #[test]
     fn test_electric_field_null() {
-        let part = Particle {
+        let particle = Particle {
             mass: 1_f64,
-            pos: Vector2D { x: 0.0, y: 0.0 },
+            position: Vector2D { x: 0.0, y: 0.0 },
             charge: 1.0e-9,
             radius: 1_f64,
         };
         let point = Vector2D { x: 0.0, y: 0.0 };
-        let e_field = electric_field_ch_point(&part, point);
+        let electric_field = electric_field_at_point(&particle, point);
 
-        assert!(e_field.x.abs() < 0.000001 && e_field.y.abs() < 0.000001);
+        assert!(electric_field.x.abs() < 0.000001 && electric_field.y.abs() < 0.000001);
     }
 
     #[test]
     fn test_total_electric_field() {
-        let mut part_list = Vec::new();
-        part_list.push(Particle {
+        let mut particles = Vec::new();
+        particles.push(Particle {
             mass: 1.0,
-            pos: Vector2D { x: 0.0, y: 0.0 },
+            position: Vector2D { x: 0.0, y: 0.0 },
             charge: 1e-9,
             radius: 1.0,
         });
-        part_list.push(Particle {
+        particles.push(Particle {
             mass: 1.0,
-            pos: Vector2D { x: 3.0, y: 3.0 },
+            position: Vector2D { x: 3.0, y: 3.0 },
             charge: 1e-9,
             radius: 1.0,
         });
 
         let point = Vector2D { x: 1.5, y: 1.5 };
 
-        let solution = Vector2D { x: 0.0, y: 0.0 };
+        let expected = Vector2D { x: 0.0, y: 0.0 };
 
-        let total_field = total_electric_field(&part_list, point);
+        let total_field = total_electric_field(&particles, point);
 
-        let result = (total_field - solution).module();
+        let difference_magnitude = (total_field - expected).magnitude();
 
-        assert!(result < 0.000001);
+        assert!(difference_magnitude < 0.000001);
     }
 }

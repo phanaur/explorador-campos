@@ -9,20 +9,20 @@ pub struct Vector2D {
 
 /// Métodos propios
 impl Vector2D {
-    pub fn module_squared(self) -> f64 {
+    pub fn magnitude_squared(self) -> f64 {
         self.x.powi(2) + self.y.powi(2)
     }
 
-    pub fn module(self) -> f64 {
-        self.module_squared().sqrt()
+    pub fn magnitude(self) -> f64 {
+        self.magnitude_squared().sqrt()
     }
 
-    pub fn scalar_prod(self, rhs: Vector2D) -> f64 {
+    pub fn dot_product(self, rhs: Vector2D) -> f64 {
         self.x * rhs.x + self.y * rhs.y
     }
 
-    pub fn unit(self) -> Vector2D {
-        self / self.module()
+    pub fn normalized(self) -> Vector2D {
+        self / self.magnitude()
     }
 }
 
@@ -106,128 +106,131 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_vector2d_module() {
+    fn test_vector2d_magnitude() {
         let a = Vector2D { x: 3.0, y: 4.0 };
-        let solution: f64 = 5.0;
+        let expected: f64 = 5.0;
 
-        let result = (a.module() - solution).abs();
+        let absolute_error = (a.magnitude() - expected).abs();
 
-        assert!(result < 0.000001);
+        assert!(absolute_error < 0.000001);
     }
 
     #[test]
-    fn test_vector2d_module_squared() {
+    fn test_vector2d_magnitude_squared() {
         let a = Vector2D { x: 3.0, y: 4.0 };
-        let solution: f64 = 25.0;
+        let expected: f64 = 25.0;
 
-        let result = (a.module_squared() - solution).abs();
+        let absolute_error = (a.magnitude_squared() - expected).abs();
 
-        assert!(result < 0.000001);
+        assert!(absolute_error < 0.000001);
     }
 
     #[test]
-    fn test_scalar() {
+    fn test_scalar_multiplication() {
         let a = Vector2D { x: 3.0, y: 4.0 };
         let scalar: f64 = 3.0;
-        let solution = Vector2D { x: 9.0, y: 12.0 };
+        let expected = Vector2D { x: 9.0, y: 12.0 };
 
-        let result = (a * scalar - solution).module().abs();
+        let difference_magnitude = (a * scalar - expected).magnitude().abs();
 
-        assert!(result < 0.000001);
+        assert!(difference_magnitude < 0.000001);
     }
 
     #[test]
     fn test_sub_assign() {
         let mut a = Vector2D { x: 2.0, y: 1.0 };
         let b = Vector2D { x: 1.0, y: 1.0 };
-        let solution = Vector2D { x: 1.0, y: 0.0 };
+        let expected = Vector2D { x: 1.0, y: 0.0 };
         a -= b;
 
-        let result = a - solution;
+        let difference = a - expected;
 
-        assert!(result.x.abs() < 0.000001 && result.y.abs() < 0.000001);
+        assert!(difference.x.abs() < 0.000001 && difference.y.abs() < 0.000001);
     }
 
     #[test]
     fn test_sub() {
         let a = Vector2D { x: 2.0, y: 1.0 };
         let b = Vector2D { x: 1.0, y: 1.0 };
-        let solution = Vector2D { x: 1.0, y: 0.0 };
-        let sub = a - b;
+        let expected = Vector2D { x: 1.0, y: 0.0 };
+        let difference = a - b;
 
-        let result = sub - solution;
+        let difference_from_expected = difference - expected;
 
-        assert!(result.x.abs() < 0.000001 && result.y.abs() < 0.000001);
+        assert!(
+            difference_from_expected.x.abs() < 0.000001
+                && difference_from_expected.y.abs() < 0.000001
+        );
     }
 
     #[test]
     fn test_add_assign() {
         let mut a = Vector2D { x: 2.0, y: 1.0 };
         let b = Vector2D { x: 1.0, y: 1.0 };
-        let solution = Vector2D { x: 3.0, y: 2.0 };
+        let expected = Vector2D { x: 3.0, y: 2.0 };
         a += b;
 
-        let result = a - solution;
+        let difference = a - expected;
 
-        assert!(result.x.abs() < 0.000001 && result.y.abs() < 0.000001);
+        assert!(difference.x.abs() < 0.000001 && difference.y.abs() < 0.000001);
     }
 
     #[test]
     fn test_add() {
         let a = Vector2D { x: 2.0, y: 1.0 };
         let b = Vector2D { x: 1.0, y: 1.0 };
-        let solution = Vector2D { x: 3.0, y: 2.0 };
-        let sub = a + b;
+        let expected = Vector2D { x: 3.0, y: 2.0 };
+        let sum = a + b;
 
-        let result = sub - solution;
+        let difference = sum - expected;
 
-        assert!(result.x.abs() < 0.000001 && result.y.abs() < 0.000001);
+        assert!(difference.x.abs() < 0.000001 && difference.y.abs() < 0.000001);
     }
 
     #[test]
     fn test_div() {
         let a = Vector2D { x: 2.0, y: 2.0 };
         let scalar: f64 = 2.0;
-        let solution = Vector2D { x: 1.0, y: 1.0 };
+        let expected = Vector2D { x: 1.0, y: 1.0 };
 
-        let result = a / scalar - solution;
+        let difference = a / scalar - expected;
 
-        assert!(result.x.abs() < 0.000001 && result.y.abs() < 0.000001);
+        assert!(difference.x.abs() < 0.000001 && difference.y.abs() < 0.000001);
     }
 
     #[test]
     fn test_mul() {
         let a = Vector2D { x: 2.0, y: 1.0 };
         let scalar: f64 = 2.0;
-        let solution = Vector2D { x: 4.0, y: 2.0 };
+        let expected = Vector2D { x: 4.0, y: 2.0 };
 
-        let result = (a * scalar - solution).module().abs();
+        let difference_magnitude = (a * scalar - expected).magnitude().abs();
 
-        assert!(result < 0.000001);
+        assert!(difference_magnitude < 0.000001);
     }
 
     #[test]
-    fn test_vector2d_scalar_prod() {
+    fn test_vector2d_dot_product() {
         let a = Vector2D { x: 1.0, y: 1.0 };
         let b = Vector2D { x: 2.0, y: 2.0 };
-        let solution: f64 = 4.0;
+        let expected: f64 = 4.0;
 
-        let result = (a.scalar_prod(b) - solution).abs();
+        let absolute_error = (a.dot_product(b) - expected).abs();
 
-        assert!(result < 0.000001);
+        assert!(absolute_error < 0.000001);
     }
 
     #[test]
-    fn test_vector2d_unit() {
+    fn test_vector2d_normalized() {
         let a = Vector2D { x: 2.0, y: 2.0 };
-        let number: f64 = 8.0;
-        let solution = Vector2D {
-            x: 2.0 / number.sqrt(),
-            y: 2.0 / number.sqrt(),
+        let magnitude_squared: f64 = 8.0;
+        let expected = Vector2D {
+            x: 2.0 / magnitude_squared.sqrt(),
+            y: 2.0 / magnitude_squared.sqrt(),
         };
 
-        let result = a.unit() - solution;
+        let difference = a.normalized() - expected;
 
-        assert!(result.x.abs() < 0.000001 && result.y.abs() < 0.000001);
+        assert!(difference.x.abs() < 0.000001 && difference.y.abs() < 0.000001);
     }
 }

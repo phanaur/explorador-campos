@@ -1,10 +1,10 @@
 # Estado del proyecto
 
-Última actualización: 2026-09-09
+Última actualización: 2026-09-11
 
 ## Fase actual
 
-Cuadrícula densa de vectores orientados con gradiente de color logarítmico (HSL de azul a rojo según la intensidad del campo eléctrico) para una partícula fija dibujada con Macroquad. El espacio visible se deduce dinámicamente con `screen_to_world`, barriendo en pasos físicos de 0.5 m con segmentos de 5 px. Núcleo matemático (`src/math.rs`), núcleo físico (`src/physics.rs`) y proyección (`src/screen.rs`) permanecen desacoplados. 18 pruebas unitarias verificadas.
+Cuadrícula densa de vectores orientados con gradiente de color logarítmico (HSL de azul a rojo según la intensidad del campo eléctrico) para una partícula fija dibujada con Macroquad. El espacio visible se deduce dinámicamente con `screen_to_world`, barriendo en pasos físicos de 0.5 m con segmentos de 5 px. Los parámetros de visualización están extraídos como constantes con unidades explícitas en sus nombres. Núcleo matemático (`src/math.rs`), núcleo físico (`src/physics.rs`) y proyección (`src/screen.rs`) permanecen desacoplados. 18 pruebas unitarias verificadas.
 
 ## Objetivo acordado
 
@@ -43,17 +43,18 @@ si se continúa, se cierra o se redefine el proyecto.
 - **Sistema de coordenadas y proyección desacoplada:** coordenadas cartesianas 2D para el espacio físico en metros. Función pura `world_to_screen` en `src/screen.rs` que invierte el eje $Y$, escala y traslada el origen al centro de la pantalla en píxeles. Se mantiene independiente de librerías gráficas externas, delegando la conversión al tipo de la GPU a la frontera de dibujo.
 - **Unidades:** Sistema Internacional (metros, culombios, newtons por culombio).
 - **Representación de carga:** posición 2D y valor escalar con signo en el propio dato numérico, evitando banderas o condicionales.
-- **Tipos de dominio iniciales:** estructura con campos nombrados `Vector2D` (`x: f64`, `y: f64`) para posiciones y vectores en el plano, y `Particle` (`mass: f64`, `pos: Vector2D`, `charge: f64`).
+- **Tipos de dominio iniciales:** estructura con campos nombrados `Vector2D` (`x: f64`, `y: f64`) para posiciones y vectores en el plano, y `Particle` (`mass: f64`, `position: Vector2D`, `charge: f64`).
 - **Semántica de copia para vectores:** `Vector2D` implementa `Clone` y `Copy` al ser un tipo pequeño de datos contiguos (16 bytes), facilitando el paso por valor en operaciones algebraicas.
 - **Semántica de entidad para partículas:** `Particle` representa una entidad física con estado y no implementa `Copy`. Las funciones que inspeccionan sus propiedades reciben préstamos inmutables (`&Particle`).
-- **Normalización vectorial:** método `unit` en `Vector2D` para obtener el vector unitario en la misma dirección.
+- **Normalización vectorial:** método `normalized` en `Vector2D` para obtener el vector unitario en la misma dirección.
 - **Sobrecarga de operadores:** implementación de traits de `std::ops` (`Sub`, `Add`, `Mul<f64>`, `Div<f64>`, `Neg`, `AddAssign`, `SubAssign`) para expresar operaciones algebraicas de forma idiomática.
-- **Pruebas de coma flotante:** validación con tolerancia (épsilon) y diferencia absoluta (`abs`) o módulo euclídeo (`module()`) con `assert!`, evitando la igualdad estricta de `assert_eq!`.
-- **Modelo de partícula y singularidad:** `Particle` incorpora `radius: f64` modelando una corteza esférica delgada. Para distancias al cuadrado menores o iguales al radio al cuadrado ($r^2 \le R^2$), `electric_field_ch_point` retorna un vector nulo (`Vector2D { x: 0.0, y: 0.0 }`). Esto resuelve la singularidad en $r = 0$ y evita divisiones por cero (`NaN`/`inf`) sin introducir raíces cuadradas adicionales.
+- **Pruebas de coma flotante:** validación con tolerancia (épsilon) y diferencia absoluta (`abs`) o magnitud euclídea (`magnitude()`) con `assert!`, evitando la igualdad estricta de `assert_eq!`.
+- **Modelo de partícula y singularidad:** `Particle` incorpora `radius: f64` modelando una corteza esférica delgada. Para distancias al cuadrado menores o iguales al radio al cuadrado ($r^2 \le R^2$), `electric_field_at_point` retorna un vector nulo (`Vector2D { x: 0.0, y: 0.0 }`). Esto resuelve la singularidad en $r = 0$ y evita divisiones por cero (`NaN`/`inf`) sin introducir raíces cuadradas adicionales.
 - **Superposición electrostática y colecciones:** función pura `total_electric_field` desacoplada del contenedor mediante una rodaja (`&[Particle]`), permitiendo evaluar campos sobre cualquier secuencia contigua sin exigir la propiedad de un `Vec`.
 - **Muestreo en cuadrícula de paso fijo:** límites del mundo calculados dinámicamente según la ventana con `screen_to_world`. Se evalúan y dibujan en modo inmediato en cada fotograma.
 - **Gradiente de color logarítmico (HSL):** representación de la magnitud del campo mediante `hsl_to_rgb` con saturación 1.0 y luminosidad 0.5. El tono varía entre 0.66 (azul, campo débil) y 0.0 (rojo, campo intenso) normalizando el logaritmo del módulo acotado con `clamp`.
 - **Muestreo denso de visualización:** paso físico de 0.5 m y longitud de segmento de 5 px para lograr resolución visual adecuada sin solapamientos.
+- **Nomenclatura:** identificadores descriptivos en inglés para constantes, API y valores que viven fuera de una fórmula local; unidades incluidas cuando aclaran la interpretación. Se conservan nombres matemáticos breves cuando son convencionales y su alcance es pequeño.
 - **Forma de trabajo:** un lenguaje y un cambio conceptual cada vez; la IA
   actuará como tutora salvo petición explícita de implementación completa.
 
@@ -62,16 +63,17 @@ si se continúa, se cierra o se redefine el proyecto.
 - Proyecto de Cargo modularizado, con Macroquad declarado como dependencia externa (`0.4.16` en `Cargo.toml`) y `Cargo.lock` actualizado.
 - Toolchain estable instalada: Rust 1.98.0.
 - `Vector2D` aislado en `src/math.rs` con `Copy`, `Clone`, métodos propios e implementaciones completas de `std::ops`.
-- `Particle` y funciones de cálculo (`electric_field_ch_point` y `total_electric_field`) aisladas en `src/physics.rs`.
+- `Particle` y funciones de cálculo (`electric_field_at_point` y `total_electric_field`) aisladas en `src/physics.rs`.
 - Funciones puras `world_to_screen` y `screen_to_world` implementadas y probadas en `src/screen.rs`.
 - `src/main.rs` conectando los módulos (`mod math; mod physics; mod screen;`).
 - Módulo de pruebas unitarias con 18 pruebas pasando al 100% (11 en `math`, 4 en `physics`, 3 en `screen`), con comparaciones mediante diferencias absolutas o módulos vectoriales.
 - Barrido denso implementado en `src/main.rs` con paso de 0.5 m, evaluando el campo y coloreando los segmentos en degradado HSL logarítmico.
+- Constantes de visualización extraídas en `src/main.rs` para hacer explícitas su función y sus unidades.
 - `cargo fmt --check`, `cargo check`, `cargo test` y `cargo clippy` terminan correctamente. Persisten advertencias de elementos e importaciones sin usar.
 
 ## Siguiente paso
 
-Extraer constantes mágicas de visualización y permitir mover la carga fija con el ratón.
+Permitir mover la carga fija con el ratón.
 
 ## Fuera del alcance actual
 
@@ -111,3 +113,4 @@ Extraer constantes mágicas de visualización y permitir mover la carga fija con
 - **2026-09-09 (primer vector de campo):** el usuario conectó `electric_field_ch_point` con la representación gráfica. Corrigió el uso inicial del campo sin normalizar y sumó el punto de muestreo al desplazamiento para obtener el extremo absoluto. Se verificaron formato, compilación, 18 pruebas y Clippy; persisten advertencias por elementos aún no utilizados.
 - **2026-09-09 (cuadrícula de vectores):** el usuario implementó el muestreo en cuadrícula mediante dos bucles `while` anidados con paso físico fijo de 2 m. El rango visible se calcula proyectando la esquina inferior derecha con `screen_to_world` y aprovechando la simetría respecto al centro. Se evalúa y dibuja en cada punto la dirección del campo eléctrico mediante un segmento orientado de 40 px. Formato, compilación, 18 pruebas y Clippy verificados; persisten advertencias por elementos no usados.
 - **2026-09-09 (gradiente logarítmico HSL):** el usuario implementó el coloreado del campo mediante una escala logarítmica normalizada mapeada al tono HSL (azul en campo débil, rojo en campo intenso). Se refinó la cuadrícula a un paso de 0.5 m con segmentos de 5 px y se calcularon los extremos fuera del bucle. Formato, compilación, 18 pruebas y Clippy verificados; persisten advertencias por elementos no usados.
+- **2026-09-11:** se extrajeron las constantes de visualización y se revisó la nomenclatura de `main.rs`, `math.rs`, `physics.rs` y `screen.rs`, sin cambiar el comportamiento. La API matemática usa `magnitude`, `magnitude_squared`, `dot_product` y `normalized`; el campo eléctrico se calcula mediante `electric_field_at_point`. Formato, compilación, 18 pruebas y Clippy verificados; persisten cuatro advertencias por elementos aún no usados.
