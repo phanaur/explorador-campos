@@ -5,6 +5,7 @@ use crate::math::Vector2D;
 const COULOMB_CONSTANT: f64 = 8.9875e9; // Nm^2C^{-2}
 
 /// Struct de Partícula.
+#[derive(Clone, Copy, Debug)]
 pub struct Particle {
     pub mass: f64,
     pub position: Vector2D,
