@@ -10,20 +10,24 @@ forma visual.
 
 ## Estado
 
-El repositorio está inicializado, pero la simulación todavía no ha comenzado.
-No hay dependencias externas ni código de dominio.
+La primera etapa está completada. La aplicación representa dos cargas puntuales
+arrastrables, calcula su campo eléctrico total y lo dibuja sobre una cuadrícula
+con un gradiente logarítmico de intensidad. Cada carga muestra además un signo
+visual: rojo para la positiva y azul para la negativa. El núcleo matemático, el
+cálculo físico y la proyección de coordenadas permanecen separados y están
+respaldados por 18 pruebas unitarias.
 
 El punto actual y el siguiente paso se mantienen en [ESTADO.md](ESTADO.md).
 Las reglas para trabajar con asistentes de IA están en [AGENTS.md](AGENTS.md).
 
 ## Primera etapa
 
-- Calcular el campo de una carga puntual en dos dimensiones.
-- Verificar propiedades conocidas mediante pruebas.
-- Dibujar el campo en una cuadrícula.
-- Mover una carga con el ratón.
-- Añadir una segunda carga.
-- Detenerse y decidir si merece la pena continuar.
+- [x] Calcular el campo de una carga puntual en dos dimensiones.
+- [x] Verificar propiedades conocidas mediante pruebas.
+- [x] Dibujar el campo en una cuadrícula.
+- [x] Mover una carga con el ratón.
+- [x] Añadir una segunda carga.
+- [x] Detenerse y decidir si merece la pena continuar.
 
 ## Principio de trabajo
 
