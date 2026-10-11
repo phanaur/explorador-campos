@@ -41,6 +41,8 @@ si se continúa, se cierra o se redefine el proyecto.
   Cargo y el interés del usuario por comprender propiedad y referencias.
 - **Formato:** aplicación de escritorio autocontenida. No se comenzará por la
   web para evitar mezclar lenguajes y plataformas.
+- **Compatibilidad web comprobada (2026-10-11):** el explorador actual también funciona en el navegador mediante WebAssembly, sin cambios en el código Rust ni en la configuración de Cargo. Se ha realizado una prueba local; la publicación y una interfaz de laboratorio siguen sin estar acordadas.
+- **Archivos de compilación y despliegue:** los archivos generados se mantienen fuera del control de versiones (`target/` ya está ignorado). Cuando se acuerde el despliegue, se prevé compilarlos mediante GitHub Actions; el flujo aún no está implementado.
 - **Representación elegida:** Macroquad sustituye a la opción inicial de Raylib.
   El usuario prefiere su integración con Cargo y evitar la compilación de la
   biblioteca C de Raylib. El arranque usa la macro de entrada y el uso mínimo de
@@ -94,7 +96,15 @@ si se continúa, se cierra o se redefine el proyecto.
 
 ## Siguiente paso
 
-Sesión cerrada a petición del usuario. Los ejes y la numeración están implementados: marcas cada 1 m, números cada 5 m, etiquetas de X centradas mediante su anchura medida y signos de Y correctos. Las etiquetas de Y ya empiezan a una distancia fija del eje (media marca más 4 px). Punto de retomada propuesto: centrar verticalmente esas etiquetas respecto a las marcas y añadir la indicación de metros. Se conserva la fuente predeterminada y se aplaza cualquier cambio de grosor. El usuario sigue escribiendo el código.
+Prueba local de WebAssembly completada y funcionamiento confirmado por el usuario. Los ejes y la numeración están implementados: marcas cada 1 m, números cada 5 m, etiquetas de X centradas mediante su anchura medida y signos de Y correctos. Las etiquetas de Y ya empiezan a una distancia fija del eje (media marca más 4 px). Punto de retomada propuesto: centrar verticalmente esas etiquetas respecto a las marcas y añadir la indicación de metros. Se conserva la fuente predeterminada y se aplaza cualquier cambio de grosor. El usuario sigue escribiendo el código.
+
+## Prueba local de WebAssembly
+
+- Se instaló el destino `wasm32-unknown-unknown` mediante Rustup.
+- `cargo build --locked --offline --release --target wasm32-unknown-unknown` terminó correctamente, con las advertencias conocidas de `dot_product` y `mass` sin usar. No se modificaron fuentes, dependencias ni configuración de compilación.
+- Se preparó una página temporal en `/tmp/explorador-campos-web-sase4iu3` con el archivo `.wasm` generado y el cargador `mq_js_bundle.js` incluido en Macroquad 0.4.16. Se sirvió en `http://127.0.0.1:8765/`; los tres archivos respondieron correctamente por HTTP. Estos archivos son temporales y no forman parte del repositorio.
+- El usuario confirmó que la representación y el arrastre de ambas cargas funcionan sin problemas en el navegador. El asistente verificó la compilación y la entrega por HTTP, pero no observó directamente el navegador. No se han comprobado otros navegadores ni una publicación web.
+- El servidor local se cerró a petición del usuario al terminar la prueba. Los archivos temporales no están versionados.
 
 ## Mejoras solicitadas pendientes
 
@@ -111,7 +121,7 @@ Se ha empezado por los ejes, cuya representación básica está implementada. El
 - Campos gravitatorios, magnéticos o tridimensionales.
 - Integración numérica de trayectorias.
 - Exportación de datos o gráficas.
-- Interfaz web, WebAssembly o aplicación móvil.
+- Interfaz web completa, publicación web o aplicación móvil. La prueba local de WebAssembly ya se ha autorizado y completado.
 - Base de datos y datos de alumnos.
 - GPU, paralelismo, arquitectura ECS o acabado visual avanzado.
 - Teoría, unidades didácticas o conversión en un laboratorio completo.
@@ -151,3 +161,4 @@ Se ha empezado por los ejes, cuya representación básica está implementada. El
 - **2026-09-12 (indicador de signo y transición a bucles explícitos):** el usuario implementó la distinción visual de carga sobre el disco blanco de cada partícula: una cruz roja para cargas positivas y un segmento horizontal azul para cargas negativas. Para no introducir colecciones redundantes, adaptó `draw_particles` para recibir `&[Particle]` además de posiciones y radios, encadenándolos con un segundo `zip` en el bucle de dibujo. Se descartó el uso inicial de `match` con comparaciones relacionales al aclarar la diferencia entre coincidencia de patrones y bifurcación condicional (`if` / `else if`), y se corrigió el escalado del radio a píxeles para calcular las dimensiones del símbolo. En una segunda parte de la sesión, el usuario inició la sustitución del andamiaje temporal de iteradores (`iter()`, `map()`, `collect()`, `position()`) por bucles estándar y comprobaciones explícitas en `main.rs`, resolviendo errores de propiedad y consumo mediante préstamos inmutables (`&particles`), tipos `Copy` en vectores primitivos y extracción de `Option<usize>` con `if let Some(index)`. Formato, compilación y 18 pruebas unitarias verificados.
 - **2026-09-23 (sincronización y cierre documental):** al preparar el push se detectó que `origin/main` ya contenía el indicador de signo y la transición parcial a bucles explícitos. Se conservaron esos cambios remotos, se actualizó el README que aún describía el proyecto como no iniciado y se situó el proyecto en un nuevo punto de decisión consciente.
 - **2026-10-11:** se completó la recuperación de iteradores en los cinco bloques existentes, trabajando `map()`, `collect()`, `position()`, `iter_mut()` y `zip()`. El usuario implementó ejes cartesianos y cuatro recorridos de marcas anclados al origen; añadió números cada 5 m, centrado horizontal por medición de texto, signos físicos de Y correctos y margen horizontal fijo para sus etiquetas. Quedan como propuesta de retomada el centrado vertical de etiquetas y las unidades. Se solicitaron además teclas para añadir/quitar partículas, flechas de campo y consulta del campo al pulsar; siguen pendientes. La fuente queda como está. Formato, compilación, 18 pruebas y Clippy verificados al cierre, con avisos de `dot_product` y `mass` sin usar. El asistente no comprobó la ventana. Se cierra la sesión y el usuario solicita commit y push de los cambios de código y estado.
+- **2026-10-11 (prueba web):** a petición del usuario, se compiló el explorador existente para WebAssembly y se sirvió con una página y un cargador de Macroquad temporales. No hubo cambios en el código ni en Cargo. Compilación y entrega por HTTP verificadas por el asistente; representación y arrastre confirmados por el usuario. Se cerró el servidor local y se acordó mantener los archivos generados fuera del control de versiones, previendo compilación con GitHub Actions cuando se aborde el despliegue. El usuario solicita commit y push del estado documentado; no se implementa un flujo de despliegue en esta sesión.
