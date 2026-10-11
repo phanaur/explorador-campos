@@ -41,6 +41,12 @@ const HSL_BLUE_HUE: f64 = 0.66_f64;
 const FIELD_SEGMENT_LENGTH_PIXELS: f64 = 5_f64;
 const FIELD_SEGMENT_WIDTH_PIXELS: f32 = 2_f32;
 
+const AXES_WIDTH_PIXELS: f32 = 2_f32;
+const AXES_STEP_METERS: f64 = 1.0;
+const AXES_STEP_LENGTH_PIXELS: f32 = 3_f32;
+
+const FONT_SIZE: f32 = 18.0;
+
 const PARTICLE_RADIUS_SCALE_FACTOR: f64 = 1.2_f64;
 
 #[macroquad::main("BasicShapes")]
@@ -69,13 +75,9 @@ async fn main() {
     let mut dragged_particle_index: Option<usize> = None;
 
     // Establece un vector que obtiene los radios declarados de las partículas para su manipulación
-    //let mut drawn_particle_radius: Vec<f64> =
-    //    particles.iter().map(|particle| particle.radius).collect();
 
-    let mut drawn_particle_radius: Vec<f64> = Vec::new();
-    for particle in &particles {
-        drawn_particle_radius.push(particle.radius);
-    }
+    let mut drawn_particle_radius: Vec<f64> =
+        particles.iter().map(|particle| particle.radius).collect();
 
     loop {
         clear_background(BLACK);
@@ -94,51 +96,24 @@ async fn main() {
             PIXELS_PER_METER,
         );
 
-        // Itera sobre el Vec de partículas, viendo si la posición del cursor se encuentra dentro del radio de alguna de ellas.
-        //let mouse_is_over_particle: Vec<bool> = particles
-        //    .iter()
-        //    .map(|particle| {
-        //        (mouse_position_world.x - particle.position.x).abs().powi(2)
-        //            + (mouse_position_world.y - particle.position.y).abs().powi(2)
-        //            <= particle.radius.powi(2)
-        //    })
-        //    .collect();
+        let mouse_is_over_particle: Vec<bool> = particles
+            .iter()
+            .map(|particle| {
+                (mouse_position_world.x - particle.position.x).abs().powi(2)
+                    + (mouse_position_world.y - particle.position.y).abs().powi(2)
+                    <= particle.radius.powi(2)
+            })
+            .collect();
 
-        let mut mouse_is_over_particle: Vec<bool> = Vec::new();
-        for particle in &particles {
-            if (mouse_position_world.x - particle.position.x).abs().powi(2)
-                + (mouse_position_world.y - particle.position.y).abs().powi(2)
-                <= particle.radius.powi(2)
-            {
-                mouse_is_over_particle.push(true);
-                continue;
-            }
-            mouse_is_over_particle.push(false);
-        }
+        if is_mouse_button_pressed(MouseButton::Left) {
+            dragged_particle_index = mouse_is_over_particle
+                .iter()
+                .position(|&mouse_is_over_particle| mouse_is_over_particle);
 
-        // Si el ratón está sobre alguna partícula y el click izquierdo está pulsado, establece la condición de desplazamiento a true. Sólo de esa partícula
-        //if mouse_is_over_particle.iter().any(|&is_over| is_over)
-        //    && is_mouse_button_pressed(MouseButton::Left)
-        //{
-        //    is_dragging = true;
-        //    dragged_particle_index = mouse_is_over_particle.iter().position(|&is_over| is_over);
-
-        // Busca la partícula sobre la que se clicka y modifica su radio haciéndolo más grande para ver cuál se está moviendo.
-        //    for (index, particle) in particles.iter().enumerate() {
-        //        if Some(index) == dragged_particle_index {
-        //            drawn_particle_radius[index] = particle.radius * PARTICLE_RADIUS_SCALE_FACTOR;
-        //        }
-        //    }
-        //}
-
-        for n in 0..particles.len() {
-            if mouse_is_over_particle[n] && is_mouse_button_pressed(MouseButton::Left) {
+            if let Some(index) = dragged_particle_index {
                 is_dragging = true;
-                dragged_particle_index = Some(n);
-
-                if let Some(n) = dragged_particle_index {
-                    drawn_particle_radius[n] = particles[n].radius * PARTICLE_RADIUS_SCALE_FACTOR;
-                }
+                drawn_particle_radius[index] =
+                    particles[index].radius * PARTICLE_RADIUS_SCALE_FACTOR;
             }
         }
 
@@ -155,8 +130,9 @@ async fn main() {
         if is_mouse_button_released(MouseButton::Left) {
             is_dragging = false;
             dragged_particle_index = None;
-            for n in 0..particles.len() {
-                drawn_particle_radius[n] = particles[n].radius;
+
+            for (drawn_radius, particle) in drawn_particle_radius.iter_mut().zip(particles.iter()) {
+                *drawn_radius = particle.radius;
             }
         }
         electric_field_points.clear();
@@ -216,15 +192,15 @@ async fn main() {
         //    .iter()
         //    .map(|particle| world_to_screen(particle.position, width, height, PIXELS_PER_METER))
         //    .collect();
-        let mut particles_screen_position: Vec<Vector2D> = Vec::new();
-        for particle in &particles {
-            particles_screen_position.push(world_to_screen(
-                particle.position,
-                width,
-                height,
-                PIXELS_PER_METER,
-            ));
-        }
+        let particles_screen_position: Vec<Vector2D> = particles
+            .iter()
+            .map(|particle| world_to_screen(particle.position, width, height, PIXELS_PER_METER))
+            .collect();
+
+        let center_screen: Vector2D =
+            world_to_screen(Vector2D { x: 0.0, y: 0.0 }, width, height, PIXELS_PER_METER);
+
+        draw_axes(center_screen, width, height);
 
         draw_electric_field(
             &electric_field_points,
@@ -344,5 +320,128 @@ fn draw_electric_field(
                 color,
             );
         }
+    }
+}
+
+fn draw_axes(center_screen: Vector2D, width: f32, height: f32) {
+    draw_line(
+        center_screen.x as f32 - width / 2.0,
+        center_screen.y as f32,
+        center_screen.x as f32 + width / 2.0,
+        center_screen.y as f32,
+        AXES_WIDTH_PIXELS,
+        WHITE,
+    );
+
+    draw_line(
+        center_screen.x as f32,
+        center_screen.y as f32 - height / 2.0,
+        center_screen.x as f32,
+        center_screen.y as f32 + height / 2.0,
+        AXES_WIDTH_PIXELS,
+        WHITE,
+    );
+
+    let mut axe_mark_x: f32 = (center_screen.x + AXES_STEP_METERS * PIXELS_PER_METER) as f32;
+
+    let mut number: i32 = 1;
+
+    while axe_mark_x < center_screen.x as f32 + width / 2.0 {
+        draw_line(
+            axe_mark_x,
+            center_screen.y as f32 + AXES_STEP_LENGTH_PIXELS,
+            axe_mark_x,
+            center_screen.y as f32 - AXES_STEP_LENGTH_PIXELS,
+            AXES_WIDTH_PIXELS,
+            WHITE,
+        );
+        if number % 5 == 0 {
+            draw_text(
+                number.to_string(),
+                axe_mark_x
+                    - measure_text(number.to_string(), None, FONT_SIZE as u16, 1.0).width / 2.0,
+                center_screen.y as f32 - AXES_STEP_LENGTH_PIXELS - 2.0,
+                FONT_SIZE,
+                WHITE,
+            );
+        }
+        axe_mark_x += (AXES_STEP_METERS * PIXELS_PER_METER) as f32;
+        number += 1;
+    }
+
+    axe_mark_x = (center_screen.x - AXES_STEP_METERS * PIXELS_PER_METER) as f32;
+    number = -1;
+
+    while axe_mark_x > center_screen.x as f32 - width / 2.0 {
+        draw_line(
+            axe_mark_x,
+            center_screen.y as f32 + AXES_STEP_LENGTH_PIXELS,
+            axe_mark_x,
+            center_screen.y as f32 - AXES_STEP_LENGTH_PIXELS,
+            AXES_WIDTH_PIXELS,
+            WHITE,
+        );
+        if number % 5 == 0 {
+            draw_text(
+                number.to_string(),
+                axe_mark_x
+                    - measure_text(number.to_string(), None, FONT_SIZE as u16, 1.0).width / 2.0,
+                center_screen.y as f32 - AXES_STEP_LENGTH_PIXELS - 2.0,
+                FONT_SIZE,
+                WHITE,
+            );
+        }
+        axe_mark_x -= (AXES_STEP_METERS * PIXELS_PER_METER) as f32;
+        number -= 1;
+    }
+
+    let mut axe_mark_y: f32 = (center_screen.y + AXES_STEP_METERS * PIXELS_PER_METER) as f32;
+    number = -1;
+
+    while axe_mark_y < center_screen.y as f32 + height / 2.0 {
+        draw_line(
+            center_screen.x as f32 + AXES_STEP_LENGTH_PIXELS,
+            axe_mark_y,
+            center_screen.x as f32 - AXES_STEP_LENGTH_PIXELS,
+            axe_mark_y,
+            AXES_WIDTH_PIXELS,
+            WHITE,
+        );
+        if number % 5 == 0 {
+            draw_text(
+                number.to_string(),
+                center_screen.x as f32 + AXES_STEP_LENGTH_PIXELS + 4.0,
+                axe_mark_y,
+                FONT_SIZE,
+                WHITE,
+            );
+        }
+        axe_mark_y += (AXES_STEP_METERS * PIXELS_PER_METER) as f32;
+        number -= 1;
+    }
+
+    axe_mark_y = (center_screen.y - AXES_STEP_METERS * PIXELS_PER_METER) as f32;
+    number = 1;
+
+    while axe_mark_y > center_screen.y as f32 - height / 2.0 {
+        draw_line(
+            center_screen.x as f32 + AXES_STEP_LENGTH_PIXELS,
+            axe_mark_y,
+            center_screen.x as f32 - AXES_STEP_LENGTH_PIXELS,
+            axe_mark_y,
+            AXES_WIDTH_PIXELS,
+            WHITE,
+        );
+        if number % 5 == 0 {
+            draw_text(
+                number.to_string(),
+                center_screen.x as f32 + AXES_STEP_LENGTH_PIXELS + 4.0,
+                axe_mark_y,
+                FONT_SIZE,
+                WHITE,
+            );
+        }
+        axe_mark_y -= (AXES_STEP_METERS * PIXELS_PER_METER) as f32;
+        number += 1;
     }
 }
