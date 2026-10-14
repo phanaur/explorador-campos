@@ -27,10 +27,13 @@ pub fn screen_to_world(
 mod test {
     use super::*;
 
+    // Los sufijos declaran el tipo del literal sin conversiones redundantes;
+    // no cambian las dimensiones ni la precisión de las pruebas.
+
     #[test]
     fn test_world_origin_maps_to_screen_center() {
-        let width: f32 = 1920 as f32;
-        let height: f32 = 1080 as f32;
+        let width: f32 = 1920_f32;
+        let height: f32 = 1080_f32;
         let pixels_per_meter: f64 = 0.5;
         let world_origin: Vector2D = Vector2D { x: 0_f64, y: 0_f64 };
         let expected: Vector2D = Vector2D {
@@ -46,9 +49,9 @@ mod test {
 
     #[test]
     fn test_world_point_to_screen() {
-        let width: f32 = 800 as f32;
-        let height: f32 = 600 as f32;
-        let pixels_per_meter: f64 = 20 as f64;
+        let width: f32 = 800_f32;
+        let height: f32 = 600_f32;
+        let pixels_per_meter: f64 = 20_f64;
 
         let world_point = Vector2D { x: 3_f64, y: 2_f64 };
 

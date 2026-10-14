@@ -22,8 +22,15 @@ impl Vector2D {
         self.x * rhs.x + self.y * rhs.y
     }
 
-    pub fn normalized(self) -> Vector2D {
-        self / self.magnitude()
+    /// Devuelve una dirección unitaria solo si el módulo es positivo y finito.
+    /// `None` evita dividir por cero y obliga al llamador a tratar los vectores
+    /// sin dirección; devolver un vector nulo ocultaría esa diferencia.
+    pub fn normalized(self) -> Option<Vector2D> {
+        let magnitude = self.magnitude();
+        if !magnitude.is_finite() || magnitude <= 0.0 {
+            return None;
+        }
+        Some(self / magnitude)
     }
 }
 
@@ -230,8 +237,20 @@ mod test {
             y: 2.0 / magnitude_squared.sqrt(),
         };
 
-        let difference = a.normalized() - expected;
+        let difference = a.normalized().expect("El vector es finito y no nulo") - expected;
 
         assert!(difference.x.abs() < 0.000001 && difference.y.abs() < 0.000001);
+    }
+
+    #[test]
+    fn test_zero_vector_has_no_direction() {
+        assert!(Vector2D { x: 0.0, y: 0.0 }.normalized().is_none());
+    }
+
+    #[test]
+    fn test_non_finite_vector_has_no_direction() {
+        for x in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            assert!(Vector2D { x, y: 1.0 }.normalized().is_none());
+        }
     }
 }
